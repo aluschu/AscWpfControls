@@ -1,0 +1,103 @@
+<Window x:Class="AscWpfControls.Sandbox.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:asc="clr-namespace:AscWpfControls.Controls;assembly=AscWpfControls"
+        Title="AscWpfControls – Probierstube" Height="820" Width="700"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Foreground" Value="Gray" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="TextBlock" x:Key="WertStyle">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="12,0,0,0" />
+        </Style>
+
+    </Window.Resources>
+
+    <DockPanel Margin="16">
+        <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Foreground="Gray" FontSize="12"
+                   Margin="0,0,0,16"
+                   Text="Ziehen (Zeiger verschwindet und bleibt stehen), Mausrad oder Pfeiltasten. Der Regler kennt keinen Wert – er meldet nur Rasten. Was eine Raste bedeutet, entscheidet dieses Fenster." />
+
+        <!-- Erster Regler: ueber das Ereignis. Die Schrittweite haengt am Wertniveau -
+             genau die Rechnung, die spaeter im Trade-Fenster sitzt. -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <asc:RotaryEncoder x:Name="KursRegler" Ticked="KursRegler_Ticked" Diameter="180" />
+            <TextBlock Grid.Column="1" x:Name="KursAnzeige" Style="{StaticResource WertStyle}" Text="100,00" />
+            <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Kurs, über Ticked-Ereignis" />
+                <TextBlock x:Name="KursSchrittweite" Style="{StaticResource LabelStyle}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Zweiter Regler: ueber das Command, also der Weg ohne Code-Behind. -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <asc:RotaryEncoder x:Name="StueckRegler" />
+            <TextBlock Grid.Column="1" x:Name="StueckAnzeige" Style="{StaticResource WertStyle}" Text="0" />
+            <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Stückzahl, über TickCommand" />
+                <TextBlock Style="{StaticResource LabelStyle}" Text="1 Stück je Raste, nie unter null" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Dritter Regler: ohne Beschleunigung, zum Vergleich. Width/Height stehen hier bewusst
+             ungleich - der Knopf bleibt trotzdem rund und sitzt mittig in der Flaeche. -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <asc:RotaryEncoder x:Name="LinearRegler" AccelerationFactor="0" Ticked="LinearRegler_Ticked"
+                               Width="30" Height="80" />
+            <TextBlock Grid.Column="1" x:Name="LinearAnzeige" Style="{StaticResource WertStyle}" Text="0" />
+            <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Ohne Beschleunigung (AccelerationFactor=0)" />
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Zum Vergleich: hier zählt nur die Strecke" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Die Markierungen nebeneinander - jetzt ueber MarkerKind statt ueber drei Templates.
+             Der vierte zeigt, dass Markierung und Fokusring eigene Farben haben. -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+            <StackPanel Margin="0,0,24,0">
+                <asc:RotaryEncoder Diameter="72" MarkerKind="Notch" Ticked="Variante_Ticked" Tag="Notch" />
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Notch" HorizontalAlignment="Center" Margin="0,6,0,0" />
+            </StackPanel>
+            <StackPanel Margin="0,0,24,0">
+                <asc:RotaryEncoder Diameter="72" MarkerKind="Pointer" Ticked="Variante_Ticked" Tag="Pointer" />
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Pointer" HorizontalAlignment="Center" Margin="0,6,0,0" />
+            </StackPanel>
+            <StackPanel Margin="0,0,24,0">
+                <asc:RotaryEncoder Diameter="72" MarkerKind="Dot" Ticked="Variante_Ticked" Tag="Dot" />
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Dot" HorizontalAlignment="Center" Margin="0,6,0,0" />
+            </StackPanel>
+            <StackPanel Margin="0,0,24,0">
+                <asc:RotaryEncoder Diameter="72" MarkerKind="Pointer" Ticked="Variante_Ticked" Tag="Eigene Farben"
+                                   MarkerBrush="Crimson" FocusRingBrush="Transparent" Background="#1E1E1E"
+                                   BorderBrush="#555555" />
+                <TextBlock Style="{StaticResource LabelStyle}" Text="Eigene Farben" HorizontalAlignment="Center" Margin="0,6,0,0" />
+            </StackPanel>
+            <TextBlock Style="{StaticResource LabelStyle}" TextWrapping="Wrap" Width="210" Margin="8,0,0,0"
+                       Text="MarkerKind schaltet die Markierung um. Der vierte hat einen transparenten Fokusring - anklicken zeigt keinen Ring mehr." />
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource LabelStyle}" Text="Gemeldete Rasten (neueste oben)" Margin="0,0,0,4" />
+        <ListBox x:Name="Protokoll" FontFamily="Consolas" FontSize="12" />
+    </DockPanel>
+</Window>

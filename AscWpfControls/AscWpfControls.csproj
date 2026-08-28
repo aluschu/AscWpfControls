@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AscWpfControls</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Aluschu.WpfControls</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Axel Schubert</Authors>
+    <Description>Eigene WPF-Controls für .NET 10. Enthält den RotaryEncoder, einen Endlos-Drehregler ohne Anschlag, der Rasten meldet statt Werte zu verwalten.</Description>
+    <Copyright>Copyright (c) 2026 Axel Schubert</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>wpf;controls;rotary-encoder;dial;knob</PackageTags>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

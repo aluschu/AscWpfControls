@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AscWpfControls/AscWpfControls.csproj" />
+  <Project Path="AscWpfControls.Sandbox/AscWpfControls.Sandbox.csproj" />
+</Solution>

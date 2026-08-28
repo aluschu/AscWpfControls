@@ -1,0 +1,13 @@
+## .NET / Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Pakete landen im lokalen Feed, nicht im Repository
+*.nupkg
