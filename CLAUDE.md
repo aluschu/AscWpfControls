@@ -47,6 +47,25 @@ Wer unsicher ist, baut es zuerst dort, wo es gebraucht wird, und zieht später u
 verfrüht hierher wandert, nimmt die Annahmen seines ersten Aufrufers mit — und die stehen dann in
 einer Bibliothek, die sie nicht erklären kann.
 
+## Zurückhaltung gilt hier nicht
+
+In einer Anwendung ist es richtig, eine Ebene erst einzuziehen, wenn der zweite Fall da ist — sonst
+baut man auf Verdacht. **In einer Bibliothek gilt das Gegenteil**, und der Grund ist einfach: Der
+zweite Fall ist hier das Projekt eines Fremden, und das bekommt man nie zu sehen.
+
+Wo über eine Einstellung ernsthaft gestritten werden kann — steht ein Löschkreuz immer da oder nur
+bei Fokus? — bekommt sie eine Option statt einer Entscheidung. Eine Vorgabe wählen wir trotzdem,
+und zwar die, die wir selbst wollen; wer sie nicht mag, stellt sie um, statt das Control zu meiden.
+
+Das kostet einmal Arbeit. Die Alternative kostet dauerhaft: **Ein Control, das sich nicht biegen
+lässt, zieht Behelfslösungen nach sich** — und die stehen dann verstreut in den Anwendungen, wo
+niemand sie mehr findet.
+
+Der Maßstab dafür stammt von Alan Kay: „Simple things should be simple, complex things should be
+possible." Beide Hälften zählen. Optionen anzubieten heißt **nicht**, den einfachen Fall mit Fragen
+zu belasten — wer nichts einstellt, bekommt eine Vorgabe, die für sich schon eine Meinung ist. Die
+Flexibilität liegt darunter und meldet sich erst, wenn jemand sie sucht.
+
 ## Ausprobieren
 
 `AscWpfControls.Sandbox` ist eine eigene Anwendung zum Anfassen der Controls. Sie ist der schnellere
