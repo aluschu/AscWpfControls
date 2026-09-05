@@ -34,9 +34,11 @@ zwei Bedienelementen umschalten.
 ### Betroffene Klassen/Controls
 Alles neu, in `AscWpfControls/Controls/`:
 
-- Das Feld selbst (Name siehe Frage 1) — eine `TextBox`-Ableitung mit einer Ablage für Knöpfe
-- Ein Knopf-Stück fürs Löschen
-- Ein Knopf-Stück fürs Aufdecken
+- `TextField : TextBox` — das Feld
+- `FieldChrome` — die Fassung: Rahmen, Platzhalter, Knopfleiste, Loch für den Editor
+- `IFieldEditor` — die schmale Rolle, über die ein Knopf den Inhalt erreicht
+- `ClearAction` — das Löschkreuz
+- `RevealAction` — das Auge
 - `AscWpfControls/Themes/Generic.xaml` — Standardaussehen
 - `AscWpfControls.Sandbox` — eine Seite zum Anfassen, mit allen Stufen nebeneinander: ohne
   Knöpfe, mit Löschen, mit Aufdecken, mit beidem, mit eigenem Symbol und mit jeder
@@ -60,6 +62,38 @@ Alles neu, in `AscWpfControls/Controls/`:
 - Er verträgt sich mit den Knöpfen: Ist das Feld leer, steht kein Löschkreuz da, also ist der Platz
   frei. Bei einem verdeckten Wert gewinnt der Vertretungstext für „leer" (siehe *Aufdecken*) — zwei
   Texte für dieselbe Aussage wären einer zu viel.
+
+#### Die Fassung ist ein eigenes Stück, kein Vorfahr
+Der Rahmen, der Platzhalter und die Knopfleiste stecken **nicht in `TextField`**, sondern in einem
+eigenen Control `FieldChrome`. Es zeichnet die Fassung und lässt in der Mitte ein Loch, in das die
+Vorlage den eigentlichen Editor setzt — bei `TextField` den `PART_ContentHost`.
+
+Das sieht heute nach Umweg aus, weil es nur einen Benutzer gibt. Der Grund steht in der Zukunft:
+Ein Feld mit **echter** Passwort-Sicherheit kann nicht von `TextField` erben. Vererbung wirkt in
+eine Richtung — man kann etwas hinzufügen, aber nie etwas zurücknehmen, und ein geerbtes,
+bindbares `Text` wäre genau der bequeme Weg an der Sicherheit vorbei. Ein solches Control muss
+**danebenstehen** und eine `PasswordBox` umschließen. Steckt die Fassung dann in einem eigenen
+Stück, bekommt es Platzhalter und Kreuz geschenkt; ist sie in `TextField` eingebacken, wird es ein
+Umbau.
+
+**Wie ein Knopf an den Inhalt kommt:** über eine schmale Rolle, nicht über den Typ. `ClearAction`
+will keine `TextBox`, sondern jemanden, der zwei Fragen beantwortet:
+
+```csharp
+public interface IFieldEditor
+{
+    bool IsEmpty { get; }
+    void Clear();
+    event EventHandler ContentChanged;
+}
+```
+
+Damit funktioniert dasselbe Löschkreuz später an einem Passwortfeld, ohne eine Zeile Sonderfall.
+
+**Was dabei ehrlich bleibt:** `RevealAction` gibt es an einem sicheren Feld **nicht**. Aufdecken
+hieße, den Klartext anzuzeigen, und dafür müsste man auf ein `TextBox` umschalten — womit genau das
+zurückkäme, wogegen ein solches Control gebaut wäre. Eine Aktion sagt selbst, was sie braucht, und
+blendet sich aus, wo sie es nicht bekommt.
 
 #### Das Aussehen eines Knopfes — vier Stufen
 Der Maßstab ist Alan Kays Satz: „Simple things should be simple, complex things should be
@@ -99,8 +133,29 @@ skalieren mit, färben sich mit, und die Bibliothek bleibt eine einzelne DLL ohn
 
 ### Nicht im Scope
 - **Ein Passwortfeld im Sinne der Sicherheit.** Der Wert ist eine gewöhnliche Zeichenkette im
-  Speicher, wie bei jeder `TextBox`. Wer `SecureString` und Schutz vor Speicherabbildern braucht,
-  nimmt die native `PasswordBox` — die kann dafür kein Aufdecken.
+  Speicher, wie bei jeder `TextBox`. Die Tür dafür steht offen (siehe *Die Fassung ist ein eigenes
+  Stück*), aber gebaut wird es hier nicht.
+
+  Drei Gründe, warum es sich nicht nachrüsten lässt, sondern ein eigenes Control braucht — sie
+  wurden durchgespielt und sind der Grund für den Zuschnitt oben:
+  1. **Was man erbt, kann man nicht wegnehmen.** Ein geerbtes `Text` bleibt öffentlich, bindbar und
+     setzbar. Der falsche Weg wäre der bequemste, und niemand bekäme eine Warnung. Genau deshalb
+     hat die native `PasswordBox` kein `Text`.
+  2. **Der Klartext ist da, bevor man ihn schützen kann.** Getippte Zeichen gehen durch den
+     `TextEditor` in den `TextContainer`; `Text` *ist* in diesem Moment der Klartext, und ein
+     `string` lässt sich nicht überschreiben. Dazu Rückgängig-Stapel, Zwischenablage, Ziehen und
+     Ablegen, Eingabemethoden — alle hängen daran.
+  3. **Verschlüsseln im selben Prozess hilft nicht.** Der Schlüssel läge neben dem Geheimtext. Aus
+     demselben Grund rät Microsoft heute von `SecureString` in neuem Code ab.
+
+  Was `RevealAction` also leistet: **Verdecken vor fremden Blicken** — der Schlüssel auf einem
+  geteilten Bildschirm, der Screenshot, den man verschickt. Nicht: Schutz vor jemandem mit Zugriff
+  auf den Rechner. Die Doku sagt das in einem Satz, damit niemand mehr hineinliest.
+
+  Damit die Maske nicht bloß gemalt ist, gehören zwei Dinge dazu: Der **Rückgängig-Verlauf ist
+  aus**, solange verdeckt wird (sonst holt Strg+Z den Klartext zurück), und die **UI-Automation
+  meldet die Punkte**, nicht den Wert (sonst liest jeder fremde Prozess über die
+  Barrierefreiheits-Schnittstelle mit).
 - **Eingabemasken und Wertprüfung.** Ein anderes Thema mit eigenem Zuschnitt.
 - **Die Umstellung von TradeBook.** Dass die Einstellungsseite dieses Feld benutzt, ist ein eigener
   Umbau im TradeBook-Repo; er räumt dort sechs Mitglieder aus `EinstellungZeileViewModel` weg, die
