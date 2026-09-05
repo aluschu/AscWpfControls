@@ -1,4 +1,4 @@
-<Window x:Class="AscWpfControls.Sandbox.MainWindow"
+﻿<Window x:Class="AscWpfControls.Sandbox.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:asc="clr-namespace:AscWpfControls.Controls;assembly=AscWpfControls"
@@ -19,6 +19,8 @@
 
     </Window.Resources>
 
+    <TabControl>
+        <TabItem Header="RotaryEncoder">
     <DockPanel Margin="16">
         <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap" Foreground="Gray" FontSize="12"
                    Margin="0,0,0,16"
@@ -100,4 +102,64 @@
         <TextBlock DockPanel.Dock="Top" Style="{StaticResource LabelStyle}" Text="Gemeldete Rasten (neueste oben)" Margin="0,0,0,4" />
         <ListBox x:Name="Protokoll" FontFamily="Consolas" FontSize="12" />
     </DockPanel>
+        </TabItem>
+
+        <TabItem Header="TextField">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="16">
+                    <TextBlock Style="{StaticResource LabelStyle}" TextWrapping="Wrap" Margin="0,0,0,16"
+                               Text="Ein Textfeld mit Platzhalter und einer Knopfleiste am rechten Innenrand. Die Knöpfe sind eine Sammlung, kein Schalter – der dritte kostet eine kleine Klasse." />
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Nur Platzhalter, keine Knöpfe" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   PlaceholderText="Symbol oder ISIN" />
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Mit Löschkreuz – erscheint mit dem ersten Zeichen (Vorgabe)" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   PlaceholderText="Tippen Sie etwas">
+                        <asc:ClearAction />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="ShowWhen=WhenFocusedOrHovered – nur beim Hinfassen" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   Text="Zeiger drüber oder hineinklicken">
+                        <asc:ClearAction ShowWhen="WhenFocusedOrHovered" />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="ShowWhen=Always – auch am leeren Feld, damit nichts springt" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   PlaceholderText="Leer, und der Knopf steht trotzdem da">
+                        <asc:ClearAction ShowWhen="Always" />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Stufe 2 – eigenes IconGeometry, alles andere bleibt" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   Text="Eigenes Symbol">
+                        <asc:ClearAction IconGeometry="M 0,5 L 10,5 M 5,0 L 5,10" />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Stufe 3 – eigener Content statt Symbol" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   Text="Ein Wort als Knopf">
+                        <asc:ClearAction Width="Auto" Content="leeren" FontSize="10" Padding="4,0" />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="IsReadOnly – das Kreuz bleibt weg, statt wirkungslos dazustehen" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   IsReadOnly="True" Text="Kann man nicht ändern">
+                        <asc:ClearAction />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="IsEnabled=False" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   IsEnabled="False" Text="Gesperrt">
+                        <asc:ClearAction />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Zum Vergleich: eine gewöhnliche TextBox" />
+                    <TextBox Width="380" HorizontalAlignment="Left" Margin="0,4,0,16" Text="Gewöhnlich" />
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+    </TabControl>
 </Window>
