@@ -116,6 +116,8 @@ choice, but a deliberate one.
 | `MaskLength` | `16` | How many characters are shown; `0` mirrors the real length |
 | `EmptySecretText` | `(not set)` | Shown instead of dots while a secret field is empty |
 | `Actions` | empty | The buttons, in the order given |
+| `PlaceholderForeground` | grey | The placeholder's colour |
+| `FocusedBorderBrush` | blue | The border's colour while the field has focus |
 
 ### Buttons
 
@@ -130,6 +132,19 @@ away from a read-only field. When it appears is up to `ShowWhen`:
 
 `RevealAction` toggles between dots and cleartext. It appears only on a field with `IsSecret` — an
 action states what it needs and hides where it cannot get it.
+
+Every colour a button uses is a property, not a constant in the template: `Foreground`,
+`HoverForeground`, `HoverBackground`, `PressedBackground`. On a dark background the defaults are
+simply wrong, and a control nobody can recolour ends up reimplemented rather than reused.
+
+```xml
+<asc:TextField Background="#1E1E1E" Foreground="#E8E8E8" BorderBrush="#555555"
+               PlaceholderForeground="#7A7A7A" FocusedBorderBrush="#4EC9B0"
+               PlaceholderText="Readable in the dark too">
+    <asc:ClearAction Foreground="#9CDCFE" HoverForeground="#F48771"
+                     HoverBackground="#333333" PressedBackground="#454545" />
+</asc:TextField>
+```
 
 ### Icons in four stages
 

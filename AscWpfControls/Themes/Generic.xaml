@@ -120,6 +120,9 @@
         <Setter Property="Margin" Value="2,0,0,0" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Foreground" Value="#767676" />
+        <Setter Property="HoverForeground" Value="#1F1F1F" />
+        <Setter Property="HoverBackground" Value="#E1E1E1" />
+        <Setter Property="PressedBackground" Value="#CFCFCF" />
         <Setter Property="Cursor" Value="Arrow" />
         <Setter Property="Template">
             <Setter.Value>
@@ -127,7 +130,7 @@
                     <Border x:Name="Backdrop" Background="Transparent" CornerRadius="2">
                         <Grid>
                             <Viewbox x:Name="Icon" Margin="2" Stretch="Uniform">
-                                <Path Data="{TemplateBinding IconGeometry}"
+                                <Path x:Name="IconPath" Data="{TemplateBinding IconGeometry}"
                                       Fill="{TemplateBinding Foreground}"
                                       Stroke="{TemplateBinding Foreground}"
                                       StrokeThickness="{TemplateBinding IconStrokeThickness}"
@@ -140,12 +143,20 @@
                         <Trigger Property="HasContent" Value="True">
                             <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
                         </Trigger>
+                        <!-- The hover colour is set on the Path, not on the control's Foreground:
+                             overwriting Foreground would silently undo whatever colour a caller
+                             chose, the moment the pointer arrived. -->
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Backdrop" Property="Background" Value="#E1E1E1" />
-                            <Setter Property="Foreground" Value="#1F1F1F" />
+                            <Setter TargetName="Backdrop" Property="Background"
+                                    Value="{Binding HoverBackground, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <Setter TargetName="IconPath" Property="Fill"
+                                    Value="{Binding HoverForeground, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <Setter TargetName="IconPath" Property="Stroke"
+                                    Value="{Binding HoverForeground, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Backdrop" Property="Background" Value="#CFCFCF" />
+                            <Setter TargetName="Backdrop" Property="Background"
+                                    Value="{Binding PressedBackground, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -191,6 +202,7 @@
         <Setter Property="BorderBrush" Value="#9A9A9A" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="5,3" />
+        <Setter Property="PlaceholderForeground" Value="#9A9A9A" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:FieldChrome}">
@@ -220,7 +232,7 @@
                             <TextBlock x:Name="Placeholder" Grid.Column="0"
                                        Margin="{TemplateBinding Padding}"
                                        Text="{TemplateBinding PlaceholderText}"
-                                       Foreground="#9A9A9A"
+                                       Foreground="{TemplateBinding PlaceholderForeground}"
                                        VerticalAlignment="Center"
                                        IsHitTestVisible="False"
                                        Visibility="Collapsed"
@@ -252,6 +264,8 @@
         <Setter Property="BorderBrush" Value="#9A9A9A" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="5,3" />
+        <Setter Property="PlaceholderForeground" Value="#9A9A9A" />
+        <Setter Property="FocusedBorderBrush" Value="#3A6EA5" />
         <Setter Property="AllowDrop" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
@@ -262,6 +276,7 @@
                                           BorderThickness="{TemplateBinding BorderThickness}"
                                           Padding="{TemplateBinding Padding}"
                                           PlaceholderText="{TemplateBinding PlaceholderText}"
+                                          PlaceholderForeground="{TemplateBinding PlaceholderForeground}"
                                           IsPlaceholderVisible="{TemplateBinding IsPlaceholderVisible}"
                                           MaskText="{TemplateBinding MaskText}"
                                           IsMaskVisible="{TemplateBinding IsMasked}"
@@ -272,7 +287,8 @@
                     </controls:FieldChrome>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="#3A6EA5" />
+                            <Setter TargetName="Chrome" Property="BorderBrush"
+                                    Value="{Binding FocusedBorderBrush, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.55" />

@@ -47,6 +47,21 @@ public class FieldChrome : ContentControl
         set => SetValue(PlaceholderTextProperty, value);
     }
 
+    public static readonly DependencyProperty PlaceholderForegroundProperty = DependencyProperty.Register(
+        nameof(PlaceholderForeground), typeof(System.Windows.Media.Brush), typeof(FieldChrome));
+
+    /// <summary>
+    /// The placeholder's colour. Muted by default, so that nobody mistakes it for content - and a
+    /// property rather than a constant, because on a dark background the default is simply wrong.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("The placeholder's colour.")]
+    public System.Windows.Media.Brush? PlaceholderForeground
+    {
+        get => (System.Windows.Media.Brush?)GetValue(PlaceholderForegroundProperty);
+        set => SetValue(PlaceholderForegroundProperty, value);
+    }
+
     public static readonly DependencyProperty IsPlaceholderVisibleProperty = DependencyProperty.Register(
         nameof(IsPlaceholderVisible), typeof(bool), typeof(FieldChrome), new PropertyMetadata(false));
 

@@ -50,6 +50,49 @@ public abstract class FieldAction : ButtonBase
         set => SetValue(IconGeometryProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty = DependencyProperty.Register(
+        nameof(HoverForeground), typeof(Brush), typeof(FieldAction));
+
+    /// <summary>
+    /// The icon's colour while the pointer is over the button. Unset leaves <c>Foreground</c> in
+    /// place.
+    ///
+    /// A property rather than a fixed value in the template, because the template used to overwrite
+    /// <c>Foreground</c> on hover - so a caller who set a colour of their own watched it change
+    /// under the pointer with no way to stop it.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("The icon's colour while the pointer is over the button.")]
+    public Brush? HoverForeground
+    {
+        get => (Brush?)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HoverBackgroundProperty = DependencyProperty.Register(
+        nameof(HoverBackground), typeof(Brush), typeof(FieldAction));
+
+    /// <summary>The backdrop behind the icon while the pointer is over the button.</summary>
+    [Category(CategoryName)]
+    [Description("The backdrop while the pointer is over the button.")]
+    public Brush? HoverBackground
+    {
+        get => (Brush?)GetValue(HoverBackgroundProperty);
+        set => SetValue(HoverBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty PressedBackgroundProperty = DependencyProperty.Register(
+        nameof(PressedBackground), typeof(Brush), typeof(FieldAction));
+
+    /// <summary>The backdrop while the button is held down.</summary>
+    [Category(CategoryName)]
+    [Description("The backdrop while the button is held down.")]
+    public Brush? PressedBackground
+    {
+        get => (Brush?)GetValue(PressedBackgroundProperty);
+        set => SetValue(PressedBackgroundProperty, value);
+    }
+
     public static readonly DependencyProperty IconStrokeThicknessProperty = DependencyProperty.Register(
         nameof(IconStrokeThickness), typeof(double), typeof(FieldAction), new PropertyMetadata(0.0));
 

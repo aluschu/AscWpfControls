@@ -175,6 +175,20 @@
                         <asc:RevealAction />
                     </asc:TextField>
 
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="Eigene Farben – Platzhalter, Symbole, Fokusrahmen" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   Background="#1E1E1E" Foreground="#E8E8E8" BorderBrush="#555555"
+                                   CaretBrush="#E8E8E8"
+                                   PlaceholderForeground="#7A7A7A"
+                                   FocusedBorderBrush="#4EC9B0"
+                                   PlaceholderText="Auch im Dunkeln lesbar"
+                                   IsSecret="True" Text="geheim">
+                        <asc:RevealAction Foreground="#9CDCFE" HoverForeground="#4EC9B0"
+                                          HoverBackground="#333333" PressedBackground="#454545" />
+                        <asc:ClearAction Foreground="#9CDCFE" HoverForeground="#F48771"
+                                         HoverBackground="#333333" PressedBackground="#454545" />
+                    </asc:TextField>
+
                     <TextBlock Style="{StaticResource LabelStyle}" Text="Zum Vergleich: eine gewöhnliche TextBox" />
                     <TextBox Width="380" HorizontalAlignment="Left" Margin="0,4,0,16" Text="Gewöhnlich" />
                 </StackPanel>

@@ -66,6 +66,30 @@ public class TextField : TextBox, IMaskableFieldEditor
         set => SetValue(PlaceholderTextProperty, value);
     }
 
+    public static readonly DependencyProperty PlaceholderForegroundProperty = DependencyProperty.Register(
+        nameof(PlaceholderForeground), typeof(System.Windows.Media.Brush), typeof(TextField));
+
+    /// <summary>The placeholder's colour - muted by default so it does not read as content.</summary>
+    [Category(CategoryName)]
+    [Description("The placeholder's colour.")]
+    public System.Windows.Media.Brush? PlaceholderForeground
+    {
+        get => (System.Windows.Media.Brush?)GetValue(PlaceholderForegroundProperty);
+        set => SetValue(PlaceholderForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty FocusedBorderBrushProperty = DependencyProperty.Register(
+        nameof(FocusedBorderBrush), typeof(System.Windows.Media.Brush), typeof(TextField));
+
+    /// <summary>The border's colour while the field has the keyboard focus.</summary>
+    [Category(CategoryName)]
+    [Description("The border's colour while the field has the keyboard focus.")]
+    public System.Windows.Media.Brush? FocusedBorderBrush
+    {
+        get => (System.Windows.Media.Brush?)GetValue(FocusedBorderBrushProperty);
+        set => SetValue(FocusedBorderBrushProperty, value);
+    }
+
     private static readonly DependencyPropertyKey IsPlaceholderVisiblePropertyKey =
         DependencyProperty.RegisterReadOnly(nameof(IsPlaceholderVisible), typeof(bool), typeof(TextField),
             new PropertyMetadata(false));
