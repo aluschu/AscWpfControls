@@ -135,7 +135,7 @@
                     <TextBlock Style="{StaticResource LabelStyle}" Text="Stufe 2 – eigenes IconGeometry, alles andere bleibt" />
                     <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
                                    Text="Eigenes Symbol">
-                        <asc:ClearAction IconGeometry="M 0,5 L 10,5 M 5,0 L 5,10" />
+                        <asc:ClearAction IconGeometry="M 0,5 L 10,5 M 5,0 L 5,10" IconStrokeThickness="1.4" />
                     </asc:TextField>
 
                     <TextBlock Style="{StaticResource LabelStyle}" Text="Stufe 3 – eigener Content statt Symbol" />

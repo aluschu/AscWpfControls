@@ -115,8 +115,8 @@
          path, an own path via IconGeometry, an own Content, or an own template. The Path is only
          drawn while Content is empty - otherwise the two would sit on top of each other. -->
     <Style TargetType="{x:Type controls:FieldAction}">
-        <Setter Property="Width" Value="16" />
-        <Setter Property="Height" Value="16" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
         <Setter Property="Margin" Value="2,0,0,0" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Foreground" Value="#767676" />
@@ -126,10 +126,11 @@
                 <ControlTemplate TargetType="{x:Type controls:FieldAction}">
                     <Border x:Name="Backdrop" Background="Transparent" CornerRadius="2">
                         <Grid>
-                            <Viewbox x:Name="Icon" Margin="3" Stretch="Uniform">
+                            <Viewbox x:Name="Icon" Margin="2" Stretch="Uniform">
                                 <Path Data="{TemplateBinding IconGeometry}"
+                                      Fill="{TemplateBinding Foreground}"
                                       Stroke="{TemplateBinding Foreground}"
-                                      StrokeThickness="1.4"
+                                      StrokeThickness="{TemplateBinding IconStrokeThickness}"
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
                             </Viewbox>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -159,12 +160,11 @@
         <Setter Property="AutomationProperties.Name" Value="Clear" />
     </Style>
 
-    <!-- The eye is filled rather than stroked - an outline eye at 16 pixels turns to mush. It also
-         gains a stroke through it once the content is in clear, so the button says which way it is
-         about to go instead of only what it is. -->
+    <!-- The eye gains a stroke through it once the content is in clear, so the button says which
+         way it is about to go rather than only what it is. Both shapes are filled outlines from
+         Fluent UI System Icons; a stroked eye at sixteen pixels is a blob with a line in it. -->
     <Style TargetType="{x:Type controls:RevealAction}"
            BasedOn="{StaticResource {x:Type controls:FieldAction}}">
-        <Setter Property="Width" Value="18" />
         <Setter Property="IconGeometry" Value="{x:Static controls:RevealAction.DefaultIcon}" />
         <Setter Property="ToolTip" Value="Show" />
         <Setter Property="AutomationProperties.Name" Value="Show" />

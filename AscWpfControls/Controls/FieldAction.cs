@@ -50,6 +50,25 @@ public abstract class FieldAction : ButtonBase
         set => SetValue(IconGeometryProperty, value);
     }
 
+    public static readonly DependencyProperty IconStrokeThicknessProperty = DependencyProperty.Register(
+        nameof(IconStrokeThickness), typeof(double), typeof(FieldAction), new PropertyMetadata(0.0));
+
+    /// <summary>
+    /// How thickly <see cref="IconGeometry"/> is outlined. Zero by default, because the built-in
+    /// icons are filled outlines - the shape carries its own weight, and at sixteen pixels that
+    /// survives scaling where a stroke turns to mush.
+    ///
+    /// Set it for a geometry made of bare lines, which has no area to fill: <c>M 0,5 L 10,5</c>
+    /// draws nothing without a stroke.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("Outline width for the icon. 0 for filled shapes, more for line drawings.")]
+    public double IconStrokeThickness
+    {
+        get => (double)GetValue(IconStrokeThicknessProperty);
+        set => SetValue(IconStrokeThicknessProperty, value);
+    }
+
     public static readonly DependencyProperty ShowWhenProperty = DependencyProperty.Register(
         nameof(ShowWhen), typeof(FieldActionVisibility), typeof(FieldAction),
         new PropertyMetadata(FieldActionVisibility.WhenNotEmpty, (d, _) => ((FieldAction)d).UpdateVisibility()));

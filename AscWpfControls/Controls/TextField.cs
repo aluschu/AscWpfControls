@@ -176,12 +176,51 @@ public class TextField : TextBox, IMaskableFieldEditor
         private set => SetValue(MaskTextPropertyKey, value);
     }
 
-    private const int MaskLength = 16;
+    public static readonly DependencyProperty MaskCharProperty = DependencyProperty.Register(
+        nameof(MaskChar), typeof(char), typeof(TextField),
+        new PropertyMetadata('●', (d, _) => ((TextField)d).OnSecrecyChanged()));
+
+    /// <summary>
+    /// The character the content is replaced with. Defaults to a filled circle, the same one the
+    /// native <c>PasswordBox</c> uses - a bullet reads too faintly at ordinary text sizes.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("The character shown instead of the content.")]
+    public char MaskChar
+    {
+        get => (char)GetValue(MaskCharProperty);
+        set => SetValue(MaskCharProperty, value);
+    }
+
+    public static readonly DependencyProperty MaskLengthProperty = DependencyProperty.Register(
+        nameof(MaskLength), typeof(int), typeof(TextField),
+        new PropertyMetadata(16, (d, _) => ((TextField)d).OnSecrecyChanged()));
+
+    /// <summary>
+    /// How many mask characters are shown. Sixteen by default, whatever the value is worth.
+    ///
+    /// <b>Zero means "as many as there are characters".</b> That mirrors the real length, which is
+    /// convenient - the field then looks like every other password box - and gives away the one
+    /// thing about a secret that is otherwise free: how long it is. A deliberate choice, not an
+    /// oversight, and this control is no security component either way (see <see cref="IsSecret"/>).
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("How many mask characters are shown. 0 mirrors the real length and reveals it.")]
+    public int MaskLength
+    {
+        get => (int)GetValue(MaskLengthProperty);
+        set => SetValue(MaskLengthProperty, value);
+    }
+
+    private string BuildMaskText() =>
+        IsEmpty
+            ? EmptySecretText ?? string.Empty
+            : new string(MaskChar, MaskLength > 0 ? MaskLength : Text.Length);
 
     private void OnSecrecyChanged()
     {
         IsMasked = IsSecret && !IsRevealed;
-        MaskText = IsEmpty ? EmptySecretText ?? string.Empty : new string('•', MaskLength);
+        MaskText = BuildMaskText();
 
         // Undo keeps every earlier value. On a secret that means the cleartext survives long after
         // it was hidden again, one Ctrl+Z away.
@@ -266,8 +305,8 @@ public class TextField : TextBox, IMaskableFieldEditor
     protected override void OnTextChanged(TextChangedEventArgs e)
     {
         base.OnTextChanged(e);
-        // The dots stand in for "empty" too, so a change of content can change them.
-        MaskText = IsEmpty ? EmptySecretText ?? string.Empty : new string('•', MaskLength);
+        // The dots stand in for "empty" too, and with MaskLength 0 their number follows the value.
+        MaskText = BuildMaskText();
         ReportState();
     }
 
