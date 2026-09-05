@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Automation.Peers;
+using System.Windows.Input;
 using System.Windows.Markup;
 
 namespace AscWpfControls.Controls;
@@ -27,7 +29,7 @@ namespace AscWpfControls.Controls;
 /// </example>
 /// </summary>
 [ContentProperty(nameof(Actions))]
-public class TextField : TextBox, IFieldEditor
+public class TextField : TextBox, IMaskableFieldEditor
 {
     private const string CategoryName = "Text Field";
 
@@ -80,7 +82,138 @@ public class TextField : TextBox, IFieldEditor
     }
 
     private void UpdatePlaceholder() =>
-        IsPlaceholderVisible = !string.IsNullOrEmpty(PlaceholderText) && IsEmpty;
+        // A masked field shows its own stand-in for "empty"; two texts for one statement would be
+        // one too many.
+        IsPlaceholderVisible = !string.IsNullOrEmpty(PlaceholderText) && IsEmpty && !IsMasked;
+
+    // ----- Secrets -----
+
+    public static readonly DependencyProperty IsSecretProperty = DependencyProperty.Register(
+        nameof(IsSecret), typeof(bool), typeof(TextField),
+        new PropertyMetadata(false, (d, _) => ((TextField)d).OnSecrecyChanged()));
+
+    /// <summary>
+    /// Whether the content of this field is a secret - an API key, a password, a token.
+    ///
+    /// <b>The field decides this, not the button.</b> A value is secret or it is not, quite apart
+    /// from whether anyone offers a way to look at it; a <see cref="RevealAction"/> only asks the
+    /// field what it already knows, and stays away where the answer is no.
+    ///
+    /// Setting it hides the content behind dots and turns off the undo history - otherwise Ctrl+Z
+    /// would bring the cleartext back long after it was hidden again.
+    ///
+    /// <b>This hides, it does not protect.</b> The value is an ordinary string in memory, as in any
+    /// text box. Good against onlookers and screenshots, useless against anyone who can read the
+    /// machine.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("Whether the content is a secret and shown as dots until revealed.")]
+    public bool IsSecret
+    {
+        get => (bool)GetValue(IsSecretProperty);
+        set => SetValue(IsSecretProperty, value);
+    }
+
+    public static readonly DependencyProperty IsRevealedProperty = DependencyProperty.Register(
+        nameof(IsRevealed), typeof(bool), typeof(TextField),
+        new PropertyMetadata(false, (d, _) => ((TextField)d).OnSecrecyChanged()));
+
+    /// <summary>Whether a secret is currently shown in clear. Meaningless unless <see cref="IsSecret"/>.</summary>
+    [Category(CategoryName)]
+    [Description("Whether a secret is currently shown in clear.")]
+    public bool IsRevealed
+    {
+        get => (bool)GetValue(IsRevealedProperty);
+        set => SetValue(IsRevealedProperty, value);
+    }
+
+    public static readonly DependencyProperty EmptySecretTextProperty = DependencyProperty.Register(
+        nameof(EmptySecretText), typeof(string), typeof(TextField),
+        new PropertyMetadata("(not set)", (d, _) => ((TextField)d).OnSecrecyChanged()));
+
+    /// <summary>
+    /// What stands in for the dots while a secret field is empty. Without it an empty secret would
+    /// look exactly like a filled one, and nobody could tell whether anything had ever been entered.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("Shown instead of dots while a secret field is empty.")]
+    public string? EmptySecretText
+    {
+        get => (string?)GetValue(EmptySecretTextProperty);
+        set => SetValue(EmptySecretTextProperty, value);
+    }
+
+    private static readonly DependencyPropertyKey IsMaskedPropertyKey =
+        DependencyProperty.RegisterReadOnly(nameof(IsMasked), typeof(bool), typeof(TextField),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsMaskedProperty = IsMaskedPropertyKey.DependencyProperty;
+
+    /// <summary>Whether the content is hidden right now - secret and not revealed.</summary>
+    [Browsable(false)]
+    public bool IsMasked
+    {
+        get => (bool)GetValue(IsMaskedProperty);
+        private set => SetValue(IsMaskedPropertyKey, value);
+    }
+
+    private static readonly DependencyPropertyKey MaskTextPropertyKey =
+        DependencyProperty.RegisterReadOnly(nameof(MaskText), typeof(string), typeof(TextField),
+            new PropertyMetadata(string.Empty));
+
+    public static readonly DependencyProperty MaskTextProperty = MaskTextPropertyKey.DependencyProperty;
+
+    /// <summary>
+    /// What is shown in place of the content - for the template.
+    ///
+    /// Always the same number of dots, whatever the value. A row of dots that grew with the secret
+    /// would give away its length, which is the one thing about a secret that is free to guess.
+    /// </summary>
+    [Browsable(false)]
+    public string MaskText
+    {
+        get => (string)GetValue(MaskTextProperty);
+        private set => SetValue(MaskTextPropertyKey, value);
+    }
+
+    private const int MaskLength = 16;
+
+    private void OnSecrecyChanged()
+    {
+        IsMasked = IsSecret && !IsRevealed;
+        MaskText = IsEmpty ? EmptySecretText ?? string.Empty : new string('•', MaskLength);
+
+        // Undo keeps every earlier value. On a secret that means the cleartext survives long after
+        // it was hidden again, one Ctrl+Z away.
+        IsUndoEnabled = !IsSecret;
+
+        UpdatePlaceholder();
+        ReportState();
+    }
+
+    /// <summary>
+    /// While masked the field takes no input. The editor is hidden, so there is nothing to type
+    /// into and nowhere for the caret to be - but focus can still land here by keyboard, and
+    /// unhandled keys would then change a value nobody can see.
+    /// </summary>
+    protected override void OnPreviewTextInput(TextCompositionEventArgs e)
+    {
+        if (IsMasked)
+            e.Handled = true;
+
+        base.OnPreviewTextInput(e);
+    }
+
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
+    {
+        if (IsMasked && e.Key is Key.Back or Key.Delete or Key.Space or Key.Enter)
+            e.Handled = true;
+
+        base.OnPreviewKeyDown(e);
+    }
+
+    /// <summary>Keeps a masked value out of the accessibility interface - see the peer.</summary>
+    protected override AutomationPeer OnCreateAutomationPeer() => new TextFieldAutomationPeer(this);
 
     // ----- Actions -----
 
@@ -133,6 +266,8 @@ public class TextField : TextBox, IFieldEditor
     protected override void OnTextChanged(TextChangedEventArgs e)
     {
         base.OnTextChanged(e);
+        // The dots stand in for "empty" too, so a change of content can change them.
+        MaskText = IsEmpty ? EmptySecretText ?? string.Empty : new string('•', MaskLength);
         ReportState();
     }
 

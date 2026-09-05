@@ -61,6 +61,31 @@ public class FieldChrome : ContentControl
         set => SetValue(IsPlaceholderVisibleProperty, value);
     }
 
+    public static readonly DependencyProperty MaskTextProperty = DependencyProperty.Register(
+        nameof(MaskText), typeof(string), typeof(FieldChrome));
+
+    /// <summary>What is drawn over the hole while the content is hidden - usually a row of dots.</summary>
+    [Browsable(false)]
+    public string? MaskText
+    {
+        get => (string?)GetValue(MaskTextProperty);
+        set => SetValue(MaskTextProperty, value);
+    }
+
+    public static readonly DependencyProperty IsMaskVisibleProperty = DependencyProperty.Register(
+        nameof(IsMaskVisible), typeof(bool), typeof(FieldChrome), new PropertyMetadata(false));
+
+    /// <summary>
+    /// Whether the mask is covering the editor. Like the placeholder, the trim cannot work this out
+    /// itself - it does not know what is in its hole, let alone whether that is a secret.
+    /// </summary>
+    [Browsable(false)]
+    public bool IsMaskVisible
+    {
+        get => (bool)GetValue(IsMaskVisibleProperty);
+        set => SetValue(IsMaskVisibleProperty, value);
+    }
+
     public static readonly DependencyProperty ActionsProperty = DependencyProperty.Register(
         nameof(Actions), typeof(FieldActionCollection), typeof(FieldChrome),
         new PropertyMetadata(null, (d, e) => ((FieldChrome)d).OnActionsReplaced(e)));

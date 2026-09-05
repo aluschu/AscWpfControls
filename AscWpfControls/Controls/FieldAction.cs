@@ -73,17 +73,23 @@ public abstract class FieldAction : ButtonBase
     internal void Attach(IFieldEditor? editor)
     {
         if (_editor is { } previous)
-            previous.StateChanged -= OnEditorStateChanged;
+            previous.StateChanged -= OnStateChanged;
 
         _editor = editor;
 
         if (_editor is { } current)
-            current.StateChanged += OnEditorStateChanged;
+            current.StateChanged += OnStateChanged;
 
-        UpdateVisibility();
+        OnEditorStateChanged();
     }
 
-    private void OnEditorStateChanged(object? sender, EventArgs e) => UpdateVisibility();
+    private void OnStateChanged(object? sender, EventArgs e) => OnEditorStateChanged();
+
+    /// <summary>
+    /// Anything about the field may have changed. The base class re-decides whether to show itself;
+    /// an action with state of its own - a toggle, say - overrides this and calls back.
+    /// </summary>
+    protected virtual void OnEditorStateChanged() => UpdateVisibility();
 
     /// <summary>
     /// Whether this action can do anything at all in the field it was given. An action that cannot

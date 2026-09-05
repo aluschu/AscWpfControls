@@ -159,6 +159,24 @@
         <Setter Property="AutomationProperties.Name" Value="Clear" />
     </Style>
 
+    <!-- The eye is filled rather than stroked - an outline eye at 16 pixels turns to mush. It also
+         gains a stroke through it once the content is in clear, so the button says which way it is
+         about to go instead of only what it is. -->
+    <Style TargetType="{x:Type controls:RevealAction}"
+           BasedOn="{StaticResource {x:Type controls:FieldAction}}">
+        <Setter Property="Width" Value="18" />
+        <Setter Property="IconGeometry" Value="{x:Static controls:RevealAction.DefaultIcon}" />
+        <Setter Property="ToolTip" Value="Show" />
+        <Setter Property="AutomationProperties.Name" Value="Show" />
+        <Style.Triggers>
+            <Trigger Property="IsRevealed" Value="True">
+                <Setter Property="IconGeometry" Value="{x:Static controls:RevealAction.RevealedIcon}" />
+                <Setter Property="ToolTip" Value="Hide" />
+                <Setter Property="AutomationProperties.Name" Value="Hide" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- The trim: border, placeholder and the strip of actions, with a hole in the middle for the
          editor. It is not hit-testable - clicking it has to land in the field, or the caret would
          refuse to appear where the user pointed.
@@ -186,7 +204,18 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentPresenter Grid.Column="0" VerticalAlignment="Center" />
+                            <ContentPresenter x:Name="Editor" Grid.Column="0" VerticalAlignment="Center" />
+
+                            <!-- The mask covers the editor rather than replacing its content: the
+                                 field's Text keeps the real value at all times, and hiding stays a
+                                 matter of display. Anything else would have made Text mean one
+                                 thing on screen and another in a binding. -->
+                            <TextBlock x:Name="Mask" Grid.Column="0"
+                                       Margin="{TemplateBinding Padding}"
+                                       Text="{TemplateBinding MaskText}"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"
+                                       Visibility="Collapsed" />
 
                             <TextBlock x:Name="Placeholder" Grid.Column="0"
                                        Margin="{TemplateBinding Padding}"
@@ -205,6 +234,10 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsPlaceholderVisible" Value="True">
                             <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsMaskVisible" Value="True">
+                            <Setter TargetName="Mask" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Editor" Property="Visibility" Value="Hidden" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -230,6 +263,8 @@
                                           Padding="{TemplateBinding Padding}"
                                           PlaceholderText="{TemplateBinding PlaceholderText}"
                                           IsPlaceholderVisible="{TemplateBinding IsPlaceholderVisible}"
+                                          MaskText="{TemplateBinding MaskText}"
+                                          IsMaskVisible="{TemplateBinding IsMasked}"
                                           Actions="{TemplateBinding Actions}">
                         <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
                                       HorizontalScrollBarVisibility="Hidden"

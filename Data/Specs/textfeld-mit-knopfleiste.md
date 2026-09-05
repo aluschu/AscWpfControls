@@ -161,6 +161,28 @@ skalieren mit, färben sich mit, und die Bibliothek bleibt eine einzelne DLL ohn
   Umbau im TradeBook-Repo; er räumt dort sechs Mitglieder aus `EinstellungZeileViewModel` weg, die
   heute nur den Anzeigezustand eines Geheimnisses verwalten.
 
+### Beim Umsetzen geklärt
+- **Wer weiß, dass ein Wert geheim ist?** Das Feld, nicht der Knopf — `TextField.IsSecret`. Ein
+  Wert ist geheim oder nicht, ganz unabhängig davon, ob jemand einen Aufdecken-Knopf anbietet. Die
+  `RevealAction` fragt nur nach und blendet sich aus, wo die Antwort nein lautet.
+- **Die Maske deckt das Bedienelement zu, sie ersetzt seinen Inhalt nicht.** `Text` hält immer den
+  echten Wert; verdeckt wird nur die Darstellung. Alles andere hätte `Text` auf dem Bildschirm
+  etwas anderes bedeuten lassen als in einer Bindung — genau der Fehler, an dem der erste
+  Passwort-Entwurf gescheitert ist.
+- **Die Knöpfe sind kein `ItemsControl`.** Der legt seinen eigenen Automations-Vertreter über jedes
+  Element, und der des Knopfes kommt darunter nicht mehr durch — die Knöpfe wären für einen
+  Screenreader unsichtbar. Die Leiste ist ein Vorlagenteil, das die Fassung selbst füllt.
+- **`ButtonBase` bringt keinen Automations-Vertreter mit**, nur `Button`. `FieldActionAutomationPeer`
+  liefert ihn nach. Von `Button` zu erben wäre kürzer gewesen, schleppt aber `IsDefault` und
+  `IsCancel` mit — ein Löschkreuz, das auf die Eingabetaste hört, ist keine gute Idee.
+- **Die Fassung setzt voraus, dass das Bedienelement in ihrem Loch sein `Padding` selbst beachtet.**
+  Eine `TextBox` tut das; wer es zusätzlich am `ContentPresenter` anlegt, zahlt es doppelt und
+  versetzt den Platzhalter gegen den Text (gemessen: 6 DIP bei einem Padding von 5).
+- **Nachgewiesen an der laufenden Sandbox** (05.09.2026): Kreuz erscheint mit dem ersten Zeichen und
+  gibt den Fokus zurück, alle vier Icon-Stufen zeichnen, `IsReadOnly` hält das Kreuz fern, und im
+  verdeckten Zustand meldet das Feld `IsPassword=True` und gibt sein Wertmuster über die
+  Automation **nicht** heraus. Aufgedeckt tut es das wieder — dann steht der Wert ohnehin da.
+
 ### Offene Fragen
 
 1. **Wie heißt das Feld, und wie hängt man die Knöpfe ein?**

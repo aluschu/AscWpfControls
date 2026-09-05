@@ -156,6 +156,25 @@
                         <asc:ClearAction />
                     </asc:TextField>
 
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="IsSecret – Punkte, bis das Auge sie aufdeckt" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   IsSecret="True" Text="geheim-1234-abcd">
+                        <asc:RevealAction />
+                        <asc:ClearAction />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="IsSecret, aber leer – Vertretungstext statt Punkten" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   IsSecret="True" PlaceholderText="Wird nicht gezeigt, solange verdeckt">
+                        <asc:RevealAction />
+                    </asc:TextField>
+
+                    <TextBlock Style="{StaticResource LabelStyle}" Text="RevealAction an einem Feld ohne Geheimnis – bleibt weg" />
+                    <asc:TextField Width="380" HorizontalAlignment="Left" Margin="0,4,0,16"
+                                   Text="Kein Geheimnis">
+                        <asc:RevealAction />
+                    </asc:TextField>
+
                     <TextBlock Style="{StaticResource LabelStyle}" Text="Zum Vergleich: eine gewöhnliche TextBox" />
                     <TextBox Width="380" HorizontalAlignment="Left" Margin="0,4,0,16" Text="Gewöhnlich" />
                 </StackPanel>
