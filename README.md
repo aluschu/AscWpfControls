@@ -1,168 +1,189 @@
 # AscWpfControls
 
-Eigene WPF-Controls für .NET 10. Ohne Abhängigkeiten außer WPF selbst — die Bibliothek lässt sich also auch in Projekte einbinden, die kein Control-Paket eines Herstellers verwenden.
+WPF controls for .NET 10. No dependencies beyond WPF itself, so the library also fits into projects
+that use no vendor's control suite.
 
 ## RotaryEncoder
 
-Ein Endlos-Drehregler nach dem Vorbild eines Hardware-Encoders am Mischpult.
+An endless dial, modelled on the hardware encoders found on a mixing desk.
 
-**Das Control kennt keinen Wert.** Keine Ober- oder Untergrenze, kein Zahlenformat, keine Schrittweite — es meldet ausschließlich, dass gedreht wurde, mit einer vorzeichenbehafteten Anzahl von Rasten. Was eine Raste bedeutet, entscheidet der Empfänger: ein Cent bei einem Kurs, ein Stück bei einer Menge. Die Schrittweite darf sich dort am Wertniveau orientieren, ohne dass das Control davon weiß.
+**The control knows no value.** No upper or lower bound, no number format, no step size — all it
+reports is that it was turned, with a signed number of detents. What a detent means is up to the
+receiver: a cent on a price, one unit on a quantity. The step size may well depend on the magnitude
+of the value, and the control never has to know.
 
-Das ist nicht nur eine saubere Trennung: Ein echter Hardware-Encoder liefert genauso Rasten und keinen formatierten Wert. Wer später einen anschließen will, tauscht die Quelle und nicht den Empfänger.
+That is not only a clean separation. A real hardware encoder delivers detents in exactly the same
+way and never a formatted value; anyone wiring one in later replaces the source, not the receiver.
 
 ```xml
-<asc:RotaryEncoder Diameter="48" MarkerKind="Pointer" Ticked="Kurs_Ticked" />
+<asc:RotaryEncoder Diameter="48" MarkerKind="Pointer" Ticked="Price_Ticked" />
 ```
 
 ```csharp
-private void Kurs_Ticked(object sender, RotaryEncoderTickEventArgs e)
+private void Price_Ticked(object sender, RotaryEncoderTickEventArgs e)
 {
-    // Ein Cent ist bei einem 40-Euro-Papier richtig und bei einem 2000-Euro-Papier zäh -
-    // deshalb entscheidet hier die Schrittweite, nicht im Control.
-    _kurs = Math.Max(0, _kurs + e.Delta * Schrittweite(_kurs));
+    // A cent is right on a 40-euro share and tedious on a 2000-euro one -
+    // which is why the step size is decided here and not in the control.
+    _price = Math.Max(0, _price + e.Delta * StepSize(_price));
 }
 ```
 
-Ohne Code-Behind geht es genauso: `TickCommand` bekommt die Anzahl der Rasten als Parameter.
+Without code-behind it works just the same: `TickCommand` receives the number of detents as its
+parameter.
 
-### Bedienung
+### Interaction
 
-| Eingabe | Wirkung |
-|---------|---------|
-| Ziehen mit der linken Maustaste | Der Zeiger verschwindet und bleibt stehen, gedreht wird beliebig weit — kein Bildschirmrand, kein Anschlag |
-| Mausrad | Eine Raste je Rastung |
-| Pfeiltasten hoch/runter | Eine Raste |
-| Bild auf/ab | `TicksPerPage` Rasten |
+| Input | Effect |
+|-------|--------|
+| Dragging with the left mouse button | The pointer disappears and stays put; the turn goes on as far as you like — no edge of the screen, no end stop |
+| Mouse wheel | One detent per notch |
+| Up and down arrows | One detent |
+| Page Up and Page Down | `TicksPerPage` detents |
 
-Langsames Ziehen trifft eine einzelne Raste, schnelles Ziehen überbrückt große Abstände: Das Delta wächst mit der Ziehgeschwindigkeit. Ein Ereignis je Impuls trägt die Anzahl — der Empfänger rechnet `Wert += Delta * Schrittweite` und muss keine Ereignisse zählen.
+A slow drag hits a single detent, a fast one covers ground: the delta grows with the drag speed. One
+event per impulse carries the count — the receiver computes `value += Delta * stepSize` and never has
+to count events.
 
-Modifiertasten wertet das Control bewusst **nicht** aus. Ein Encoder am Mischpult hat keine Umschalttaste; wer feiner drehen will, liest `Keyboard.Modifiers` dort, wo ohnehin über die Schrittweite entschieden wird.
+Modifier keys are deliberately **not** interpreted. An encoder on a mixing desk has no shift key;
+anyone wanting a finer turn reads `Keyboard.Modifiers` where the step size is decided anyway.
 
-### Eigenschaften
+### Properties
 
-| Eigenschaft | Standard | Bedeutung |
-|-------------|----------|-----------|
-| `Diameter` | `26` | Die Größe des Knopfes — eine Zahl statt `Width` und `Height` |
-| `MarkerKind` | `Notch` | Die Markierung: `Notch`, `Pointer` oder `Dot` |
-| `MarkerBrush` | Blau | Farbe der Markierung, unabhängig vom `Foreground` des Knopfrands |
-| `FocusRingBrush` | Blau | Farbe des Fokusrings; `Transparent` blendet ihn aus |
-| `PixelsPerTick` | `6` | Ziehstrecke je Raste bei ruhiger Bewegung |
-| `AccelerationFactor` | `3` | Wie stark schnelles Ziehen die Rasten vervielfacht; `0` schaltet die Beschleunigung ab |
-| `MaxTicksPerEvent` | `32` | Obergrenze je Ereignis, damit ein Ruck nicht den halben Wertebereich überspringt |
-| `TicksPerPage` | `10` | Rasten für Bild auf/ab |
-| `DegreesPerTick` | `12` | Drehung der Markierung je Raste — reine Optik |
+| Property | Default | Meaning |
+|----------|---------|---------|
+| `Diameter` | `26` | The size of the knob — one number instead of `Width` and `Height` |
+| `MarkerKind` | `Notch` | The marker: `Notch`, `Pointer` or `Dot` |
+| `MarkerBrush` | Blue | Colour of the marker, independent of the rim's `Foreground` |
+| `FocusRingBrush` | Blue | Colour of the focus ring; `Transparent` hides it |
+| `PixelsPerTick` | `6` | Drag distance per detent at a calm speed |
+| `AccelerationFactor` | `3` | How strongly a fast drag multiplies the detents; `0` turns acceleration off |
+| `MaxTicksPerEvent` | `32` | Upper bound per event, so a jerk does not skip half the range |
+| `TicksPerPage` | `10` | Detents for Page Up and Page Down |
+| `DegreesPerTick` | `12` | Rotation of the marker per detent — purely cosmetic |
 
-`Ticked` als Ereignis und `TickCommand` als Command melden dasselbe. Die Nur-Lese-Werte `Angle` und `IsTurning` sind für eigene Templates gedacht.
+`Ticked` as an event and `TickCommand` as a command report the same thing. The read-only values
+`Angle` and `IsTurning` are there for your own templates.
 
-Der Knopf bleibt bei jeder Größe rund: Gezeichnet wird auf einer festen Fläche, die eine `Viewbox` gleichmäßig skaliert. Auch ungleiche `Width`/`Height` oder ein streckender Container ergeben kein Ei, sondern einen zentrierten Kreis. Der Fokusring liegt innerhalb der eigenen Fläche und überlappt deshalb keine Nachbarn.
+The knob stays round at any size: it is drawn on a fixed area that a `Viewbox` scales evenly. Uneven
+`Width`/`Height` or a stretching container produce no egg, just a centred circle. The focus ring lies
+inside the control's own area and therefore overlaps no neighbours.
 
 ## TextField
 
-Ein Textfeld mit **Platzhalter** und einer **Knopfleiste am rechten Innenrand**. Es erbt von
-`TextBox` — Bindung, Auswahl, Rückgängig, Zwischenablage und Rechtschreibprüfung sind also
-unverändert da, und wer `<TextBox>` durch `<asc:TextField>` ersetzt, verliert nichts.
+A text box with a **placeholder** and a **strip of buttons inside it**, at the right-hand end. It
+inherits from `TextBox`, so binding, selection, undo, the clipboard and spell checking are all
+unchanged — swap `<TextBox>` for `<asc:TextField>` and nothing is lost.
 
 ```xml
-<asc:TextField Text="{Binding Symbol}" PlaceholderText="Symbol oder ISIN">
+<asc:TextField Text="{Binding Symbol}" PlaceholderText="Symbol or ISIN">
     <asc:ClearAction />
 </asc:TextField>
 ```
 
-Der **Platzhalter** ist kein Wert: Er wird nicht gebunden, nicht gespeichert und nicht ausgelesen.
-Wo er sagt, was gemeint ist, kann die Beschriftung daneben kurz ausfallen oder ganz entfallen.
+The **placeholder is not a value**. It is never bound to the source, never saved and never read back.
+Where it says what is meant, the label beside the field can be short or absent altogether — which is
+the point of it.
 
-Die Knöpfe sind eine **Sammlung**, kein Satz von Schaltern — der dritte kostet eine kleine Klasse
-und keine weitere Eigenschaft am Feld.
+The buttons are a **collection**, not a set of switches: the third kind costs a small class rather
+than another property on the field.
 
-### Verdecken ist kein Schutz
+### Masking is not protection
 
-> `IsSecret` verdeckt vor **Blicken**: dem Schlüssel auf einem geteilten Bildschirm, dem Screenshot,
-> der gleich verschickt wird. **Es ist keine Sicherheitskomponente.** Der Wert steht als gewöhnliche
-> Zeichenkette im Speicher wie in jedem Textfeld, und keine Einstellung ändert daran etwas.
+> `IsSecret` hides a value from **onlookers**: the key on a shared screen, the screenshot about to be
+> sent. **It is not a security component.** The value is an ordinary string in memory, as in any text
+> box, and no setting changes that.
 >
-> Wer Schutz vor jemandem mit Zugriff auf die Maschine braucht, nimmt die native `PasswordBox` — und
-> verzichtet dafür aufs Aufdecken, denn die kann grundsätzlich keinen Klartext zeigen.
+> If you need protection from someone with access to the machine, use the native `PasswordBox` — and
+> give up revealing, because it can never show its content in clear.
 
-Zwei Dinge tut das Feld trotzdem, damit die Maske nicht bloß gemalt ist: Der **Rückgängig-Verlauf
-ist aus**, solange ein Feld geheim ist (sonst holt Strg+Z den Klartext zurück, lange nachdem
-zugeklappt wurde), und die **Barrierefreiheits-Schnittstelle bekommt den Wert nicht** — verdeckt
-meldet sich das Feld als Passwortfeld und gibt sein Wertmuster gar nicht erst heraus.
+Two things the field does anyway, so that the mask is not merely painted on: the **undo history is
+off** while a field is secret (otherwise Ctrl+Z brings the cleartext back long after it was hidden
+again), and the **accessibility interface does not get the value** — while masked the field declares
+itself a password control and withholds its value pattern entirely.
 
-`MaskLength="0"` zeigt so viele Zeichen, wie der Wert lang ist. Das sieht gewohnt aus und **gibt die
-Länge preis** — das eine, was an einem Geheimnis sonst nicht zu raten ist. Eine legitime Wahl, aber
-eine bewusste.
+`MaskLength="0"` shows as many characters as the value is long. That looks familiar and **gives the
+length away** — the one thing about a secret that is otherwise not free to guess. A legitimate
+choice, but a deliberate one.
 
-### Eigenschaften
+### Properties
 
-| Eigenschaft | Standard | Bedeutung |
-|-------------|----------|-----------|
-| `PlaceholderText` | — | Text, solange das Feld leer ist |
-| `IsSecret` | `false` | Inhalt als Punkte zeigen, bis aufgedeckt wird |
-| `IsRevealed` | `false` | Ob ein Geheimnis gerade im Klartext steht |
-| `MaskChar` | `●` | Zeichen, das den Inhalt vertritt |
-| `MaskLength` | `16` | Anzahl der Zeichen; `0` spiegelt die echte Länge |
-| `EmptySecretText` | `(not set)` | Steht statt der Punkte, wenn ein geheimes Feld leer ist |
-| `Actions` | leer | Die Knöpfe, in der angegebenen Reihenfolge |
+| Property | Default | Meaning |
+|----------|---------|---------|
+| `PlaceholderText` | — | Text shown while the field is empty |
+| `IsSecret` | `false` | Show the content as dots until it is revealed |
+| `IsRevealed` | `false` | Whether a secret is currently shown in clear |
+| `MaskChar` | `●` | The character standing in for the content |
+| `MaskLength` | `16` | How many characters are shown; `0` mirrors the real length |
+| `EmptySecretText` | `(not set)` | Shown instead of dots while a secret field is empty |
+| `Actions` | empty | The buttons, in the order given |
 
-### Knöpfe
+### Buttons
 
-`ClearAction` leert das Feld und gibt den Fokus zurück — wer löscht, will tippen. Sie bleibt weg,
-wo das Feld schreibgeschützt ist. Wann sie erscheint, sagt `ShowWhen`:
+`ClearAction` empties the field and puts the focus back — whoever clears is about to type. It stays
+away from a read-only field. When it appears is up to `ShowWhen`:
 
-| `ShowWhen` | Wirkung |
+| `ShowWhen` | Effect |
 |---|---|
-| `WhenNotEmpty` | Sobald etwas im Feld steht (Vorgabe) |
-| `WhenFocusedOrHovered` | Nur beim Hinfassen — ruhiger in einem Formular mit vielen Zeilen |
-| `Always` | Immer, damit beim ersten Zeichen nichts springt |
+| `WhenNotEmpty` | As soon as there is content (default) |
+| `WhenFocusedOrHovered` | Only on approach — quieter in a form with many rows |
+| `Always` | Always, so nothing shifts when the first character arrives |
 
-`RevealAction` schaltet zwischen Punkten und Klartext. Sie erscheint nur an einem Feld mit
-`IsSecret` — eine Aktion sagt selbst, was sie braucht, und blendet sich aus, wo sie es nicht bekommt.
+`RevealAction` toggles between dots and cleartext. It appears only on a field with `IsSecret` — an
+action states what it needs and hides where it cannot get it.
 
-### Symbole in vier Stufen
+### Icons in four stages
 
-*„Simple things should be simple, complex things should be possible"* (Alan Kay):
+*"Simple things should be simple, complex things should be possible"* (Alan Kay):
 
-| Stufe | Was gesetzt wird | Was man bekommt |
+| Stage | What you set | What you get |
 |---|---|---|
-| 1 | nichts | Das eingebaute Symbol |
-| 2 | `IconGeometry` | Ein eigener Pfad; Größe, Farbe und Verhalten bleiben |
-| 3 | `Content` | Ein beliebiger Inhalt — Bild, Wort, Glyph einer Symbolschrift |
-| 4 | `Style` / `ContentTemplate` | Vollständige Kontrolle |
+| 1 | nothing | The built-in icon |
+| 2 | `IconGeometry` | Your own path; size, colour and behaviour stay |
+| 3 | `Content` | Any visual at all — an image, a word, a glyph from an icon font |
+| 4 | `Style` / `ContentTemplate` | Full control |
 
-**Eigene Symbole für die ganze Anwendung** setzt man über einen Style — Stufe 4, einmal statt an
-jedem Feld:
+**Your own icons for a whole application** go into a style — stage 4, once instead of on every
+field:
 
 ```xml
 <Style TargetType="asc:ClearAction" BasedOn="{StaticResource {x:Type asc:FieldAction}}">
-    <Setter Property="IconGeometry" Value="{StaticResource MeinKreuz}" />
+    <Setter Property="IconGeometry" Value="{StaticResource MyCross}" />
 </Style>
 ```
 
-Die eingebauten Symbole sind **gefüllte Umrisse**. Eine Geometrie aus bloßen Linien
-(`M 0,5 L 10,5`) hat keine Fläche und bliebe unsichtbar — dafür gibt es `IconStrokeThickness`,
-Vorgabe `0`.
+The built-in icons are **filled outlines**. A geometry made of bare lines (`M 0,5 L 10,5`) has no
+area and would stay invisible — that is what `IconStrokeThickness` is for, default `0`.
 
-## Probierstube
+## Sandbox
 
-`AscWpfControls.Sandbox` ist eine kleine WPF-Anwendung zum Ausprobieren, ein Reiter je Control: beim Regler verschiedene Größen, alle Markierungen sowie einer mit und einer ohne Beschleunigung; beim Textfeld alle Sichtbarkeitsregeln, die vier Symbolstufen und ein Geheimnis zum Auf- und Zuklappen. Ein Bedienelement muss man anfassen können, um es zu beurteilen.
+`AscWpfControls.Sandbox` is a small WPF application for trying things out, one tab per control: for
+the dial, various sizes, every marker and one encoder with and one without acceleration; for the text
+field, every visibility rule, all four icon stages and a secret to open and close. A control has to
+be handled to be judged.
 
-## Paket bauen und lokal veröffentlichen
+## Building and publishing the package locally
 
 ```
 dotnet pack AscWpfControls\AscWpfControls.csproj -c Release
 dotnet nuget push AscWpfControls\bin\Release\Aluschu.WpfControls.1.0.0.nupkg -s C:\LocalNuget
 ```
 
-`C:\LocalNuget` ist der als *Local Dev Feed* eingerichtete Ordner-Feed.
+`C:\LocalNuget` is the folder feed set up as the *Local Dev Feed*.
 
-## Entstehung
+## How this came about
 
-Diese Bibliothek ist im Dialog mit **Claude** (Anthropic, über Claude Code) entstanden. Spezifikation, Code und diese Dokumentation hat Claude geschrieben; Anforderungen, Entwurfsentscheidungen und das Erproben am laufenden Programm kamen von Axel Schubert.
+This library was written in dialogue with **Claude** (Anthropic, through Claude Code). Claude wrote
+the specifications, the code and this documentation; the requirements, the design decisions and the
+testing against the running program came from Axel Schubert.
 
-Die tragende Idee stammt dabei nicht von der Maschine: dass das Control **keinen Wert kennt**, sondern nur Rasten meldet, war die Vorgabe des Autors — und erst dadurch ist aus einem Zahlenfeld mit Drehknopf ein Bedienelement geworden, das später auch ein echter Hardware-Encoder bedienen kann.
+The load-bearing idea did not come from the machine: that the control **knows no value** and only
+reports detents was the author's stipulation — and only that turned a number box with a knob into a
+control a real hardware encoder could drive one day.
 
-## Lizenz
+## Licence
 
-MIT — siehe [LICENSE.txt](LICENSE.txt).
+MIT — see [LICENSE.txt](LICENSE.txt).
 
-Die Pfaddaten der eingebauten Symbole stammen aus Microsofts **Fluent UI System Icons** (ebenfalls MIT) — siehe [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Übernommen ist nur die Geometrie: Die Schriftart wird **nicht** mitgeliefert, damit aus der einzelnen Assembly kein Paket mit Anhang wird.
+The path data of the built-in icons comes from Microsoft's **Fluent UI System Icons** (MIT as well) —
+see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Only the geometry was taken: the font is **not**
+shipped, so a single assembly stays a single assembly.
