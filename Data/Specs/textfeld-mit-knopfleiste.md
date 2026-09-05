@@ -1,4 +1,4 @@
-## Feature: Textfeld mit Knopfleiste
+## Feature: Textfeld mit Vorgabe-Text und Knopfleiste
 
 ### Status
 draft
@@ -10,6 +10,14 @@ davon werden gebraucht:
 - **Löschen** — ein Kreuz, das erscheint, sobald etwas im Feld steht, und den Inhalt wegräumt.
 - **Aufdecken** — für Werte, die verdeckt angezeigt werden: Punkte statt Text, ein Knopf, der
   umschaltet.
+
+Dazu ein **Vorgabe-Text**, der erscheint, solange das Feld leer ist. Kein Knopf, aber dieselbe
+Bauart: etwas, das in das Feld hineingezeichnet wird. Er ist der Grund, warum aus dem Vorhaben ein
+richtiges Control wird und keine angehängte Eigenschaft — mit zwei Zutaten im Feld will man **eine**
+Vorlage, die beide kennt, und nicht zwei Verzierungen, die sich um denselben Platz streiten.
+
+Was er bringt: aussagekräftige Oberflächen auf wenig Raum. Wo der Vorgabe-Text sagt, was gemeint
+ist, kann die Beschriftung daneben kurz ausfallen oder ganz entfallen.
 
 Beides sind aus Sicht des Feldes dieselbe Sache: *ein Knopf, der zum Feld gehört und etwas mit
 seinem Inhalt macht*. Sie einzeln zu bauen hieße, die Mechanik zweimal zu haben — Knopf innerhalb
@@ -42,6 +50,15 @@ Alles neu, in `AscWpfControls/Controls/`:
 - Die Leiste ist leer, solange niemand etwas hineinlegt — und kostet dann auch keinen Platz.
 - Ist das Feld gesperrt (`IsEnabled="False"`), sind es die Knöpfe auch.
 
+#### Vorgabe-Text
+- Erscheint, solange das Feld leer ist, und verschwindet mit dem ersten Zeichen.
+- Er ist **kein Wert**: Er wird nicht gebunden, nicht gespeichert und nicht ausgelesen. Wer ihn
+  stehen lässt und speichert, speichert nichts.
+- Er sieht anders aus als echter Text — gedämpft, damit niemand ihn für einen Inhalt hält.
+- Er verträgt sich mit den Knöpfen: Ist das Feld leer, steht kein Löschkreuz da, also ist der Platz
+  frei. Bei einem verdeckten Wert gewinnt der Vertretungstext für „leer" (siehe *Aufdecken*) — zwei
+  Texte für dieselbe Aussage wären einer zu viel.
+
 #### Löschen
 - Erscheint nur, wenn Text im Feld steht. Ein Kreuz an einem leeren Feld verspricht eine Wirkung,
   die es nicht hat.
@@ -61,8 +78,6 @@ Alles neu, in `AscWpfControls/Controls/`:
   Speicher, wie bei jeder `TextBox`. Wer `SecureString` und Schutz vor Speicherabbildern braucht,
   nimmt die native `PasswordBox` — die kann dafür kein Aufdecken.
 - **Eingabemasken und Wertprüfung.** Ein anderes Thema mit eigenem Zuschnitt.
-- **Ein Wasserzeichen** (Text im leeren Feld). Naheliegender Nachbar, aber kein Knopf — eigene Spec,
-  wenn er gebraucht wird.
 - **Die Umstellung von TradeBook.** Dass die Einstellungsseite dieses Feld benutzt, ist ein eigener
   Umbau im TradeBook-Repo; er räumt dort sechs Mitglieder aus `EinstellungZeileViewModel` weg, die
   heute nur den Anzeigezustand eines Geheimnisses verwalten.
@@ -70,22 +85,24 @@ Alles neu, in `AscWpfControls/Controls/`:
 ### Offene Fragen
 
 1. **Wie heißt das Feld, und wie hängt man die Knöpfe ein?**
-   Öffentliche Namen sind englisch (siehe `CLAUDE.md`).
-   - **(a)** `ActionTextBox` mit einer Sammlung `Actions`:
+   Öffentliche Namen sind englisch (siehe `CLAUDE.md`). Mit dem Vorgabe-Text ist `ActionTextBox` zu
+   eng geworden — das Control kann jetzt mehr als Aktionen.
+   - **(a)** `TextField` mit `Placeholder` und einer Sammlung `Actions`:
      ```xml
-     <asc:ActionTextBox Text="{Binding Wert}">
+     <asc:TextField Text="{Binding Wert}" Placeholder="Symbol oder ISIN">
          <asc:ClearAction />
          <asc:RevealAction />
-     </asc:ActionTextBox>
+     </asc:TextField>
      ```
-   - **(b)** `TextBoxWithButtons` mit `Buttons` — sagt, was man sieht, statt was es tut.
+   - **(b)** `EnhancedTextBox` / `SmartTextBox` — sagt nur, dass es mehr kann, nicht was.
    - **(c)** Kein eigenes Control, sondern **angehängte Eigenschaften** an der gewöhnlichen
      `TextBox` (`asc:TextBoxActions.HasClear="True"`). Dann bleibt jede vorhandene `TextBox`
      im Bestand nutzbar, ohne sie auszutauschen.
-   *Empfehlung:* **(a)**. „Action" sagt, worum es geht — etwas, das man mit dem Inhalt tut — und
-   die Sammlung ist offen für den dritten Fall, ohne dass ein Schalter dazukommt. (c) ist
-   verlockend, weil es nichts austauscht, verteilt aber das Aussehen des Feldes auf ein Template,
-   das man nicht kontrolliert.
+   *Empfehlung:* **(a)**. „Field" ist in Oberflächen-Bausätzen der übliche Name für genau das —
+   Eingabe plus Vorgabe-Text plus Symbole am Rand — und kollidiert nicht mit WPFs `TextBox`. (b)
+   sagt nichts. (c) war vor dem Vorgabe-Text noch verlockend, ist es jetzt nicht mehr: Zwei
+   Verzierungen, die sich um denselben Platz im Feld streiten, brauchen eine gemeinsame Vorlage,
+   und die hat nur ein echtes Control.
 
    Antwort:
 
@@ -97,7 +114,23 @@ Alles neu, in `AscWpfControls/Controls/`:
 
    Antwort:
 
-3. **Wie sieht der Aufdecken-Knopf aus — Auge oder Wort?**
+3. **Steht das Löschkreuz immer da, oder nur bei Fokus?**
+   Der Anlass ist unsere eigene Einstellungsseite in TradeBook: zwölf Felder untereinander, alle
+   gefüllt — also zwölf Kreuze in einer Spalte.
+   - **(a)** Immer, sobald Text im Feld steht. Ehrlich und vorhersehbar; ein Bedienelement, das
+     erst beim Hinfassen erscheint, findet man nicht, wenn man es sucht.
+   - **(b)** Nur, wenn das Feld den Fokus hat oder der Zeiger darüber steht — so machen es die
+     Browser. Ruhiger im Formular, aber versteckt.
+   - **(c)** Vorgabe (a), umschaltbar auf (b) durch den Aufrufer.
+   *Empfehlung:* **(a)** als Verhalten des Controls, und die Frage nach zwölf Kreuzen an der
+   Einstellungsseite entscheiden, wenn wir sie sehen. Ein Textfeld gibt es, um eine Information zu
+   bekommen — gefüllt ist der Normalfall, nicht die Ausnahme, und dann ist ein sichtbares Kreuz
+   auch der Normalfall. (c) ist der Ausweg, falls das Bild später dagegenspricht; ein Schalter auf
+   Verdacht wäre aber genau die Vorwegnahme, die wir uns sonst verbieten.
+
+   Antwort:
+
+4. **Wie sieht der Aufdecken-Knopf aus — Auge oder Wort?**
    TradeBook hat heute einen Umschaltknopf mit den Wörtern „Anzeigen"/„Verbergen".
    - **(a)** Ein Augensymbol, wie überall sonst üblich. Kurz, sprachfrei, in einer Bibliothek
      mit englischen Namen das Naheliegende.
