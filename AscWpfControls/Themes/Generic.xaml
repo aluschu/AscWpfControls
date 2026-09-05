@@ -160,9 +160,14 @@
     </Style>
 
     <!-- The trim: border, placeholder and the strip of actions, with a hole in the middle for the
-         editor. The placeholder shares its cell with the editor and carries the same padding, so
-         both start on the same vertical line. It is not hit-testable - clicking it has to land in
-         the field, or the caret would refuse to appear where the user pointed. -->
+         editor. It is not hit-testable - clicking it has to land in the field, or the caret would
+         refuse to appear where the user pointed.
+
+         Only the placeholder carries the padding, NOT the content presenter. A TextBox applies its
+         own Padding to the text already; adding it again here gave the text twice the inset and the
+         placeholder once, so the placeholder started a whole character to the left of the caret.
+         Measured at 6 DIP against a Padding of 5 - and gone at Padding 0, which is what identified
+         it as double counting rather than some inset inside the editor. -->
     <Style TargetType="{x:Type controls:FieldChrome}">
         <Setter Property="Background" Value="White" />
         <Setter Property="BorderBrush" Value="#9A9A9A" />
@@ -181,8 +186,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentPresenter Grid.Column="0" Margin="{TemplateBinding Padding}"
-                                              VerticalAlignment="Center" />
+                            <ContentPresenter Grid.Column="0" VerticalAlignment="Center" />
 
                             <TextBlock x:Name="Placeholder" Grid.Column="0"
                                        Margin="{TemplateBinding Padding}"
