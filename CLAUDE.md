@@ -13,20 +13,17 @@ Repos: **Es soll eine Bibliothek sein, die andere benutzen — nicht eine, die a
 | Öffentliche Namen (Typen, Eigenschaften, Ereignisse) | **Englisch** | wer die Bibliothek einbindet |
 | README, Commit-Nachrichten, Release-Notizen | **Englisch** | dieselben |
 | **Specs in `Data/Specs/`** | **Deutsch** | wir zwei, beim Bauen |
-| XML-Doku an öffentlichen Membern | **Deutsch** | der Betreuer — siehe unten |
+| XML-Doku und Code-Kommentare | **Englisch** | wer die Bibliothek einbindet oder hineinsieht |
 
 Eine Spec ist ein Arbeitspapier, kein Teil der Auslieferung. Auf Deutsch treffen wir die
 Unterscheidungen genauer, auf die es dort ankommt — und niemand sonst muss sie lesen.
 
-**Warum die XML-Doku trotzdem deutsch ist.** Sie erscheint zwar in der IntelliSense jedes
-Aufrufers, also bei dem Publikum, für das die englischen Namen gewählt wurden. Nur: Leser der
-Bibliothek gibt es heute keine, einen Betreuer schon — und der muss in einem halben Jahr lesen
-können, *warum* etwas so gebaut ist. Ein Kommentar, den der Betreuer nicht mehr entziffert, hat
-seinen Zweck verfehlt, ganz gleich wer ihn sonst noch sähe.
+**Auch die Doku ist englisch, und zwar ganz.** Sie erscheint in der IntelliSense jedes Aufrufers,
+also bei genau dem Publikum, für das die englischen Namen gewählt wurden. Das gilt ebenso für die
+Kommentare im Rumpf und für private Namen: Das Repo ist öffentlich, und eine Datei mit englischer
+Doku über deutschen Variablennamen ist halb übersetzt, nicht zweisprachig.
 
-Der `RotaryEncoder` hält es bereits so. Wenn die Bibliothek einmal wirklich benutzt wird, wird die
-Doku in einem Rutsch übersetzt — dieselbe Zurückhaltung wie überall: die Ebene einziehen, wenn der
-zweite Fall da ist, nicht auf Verdacht.
+Deutsch bleibt allein die Spec. Sie ist das einzige, was wirklich nur wir zwei lesen.
 
 Chat-Antworten sind Deutsch wie überall (siehe globale `CLAUDE.md`).
 

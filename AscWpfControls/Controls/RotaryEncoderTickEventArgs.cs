@@ -3,7 +3,7 @@ using System.Windows;
 namespace AscWpfControls.Controls;
 
 /// <summary>
-/// Meldet, dass an einem <see cref="RotaryEncoder"/> gedreht wurde.
+/// Reports that a <see cref="RotaryEncoder"/> was turned.
 /// </summary>
 public sealed class RotaryEncoderTickEventArgs : RoutedEventArgs
 {
@@ -14,11 +14,11 @@ public sealed class RotaryEncoderTickEventArgs : RoutedEventArgs
     }
 
     /// <summary>
-    /// Die Anzahl der Rasten, vorzeichenbehaftet: positiv nach oben, negativ nach unten.
+    /// The number of detents, signed: positive upwards, negative downwards.
     ///
-    /// Normalerweise 1 beziehungsweise -1. Bei schnellem Drehen fasst ein Ereignis mehrere Rasten
-    /// zusammen, statt viele Ereignisse zu schicken - der Empfaenger rechnet
-    /// <c>Wert += Delta * Schrittweite</c> und muss keine Ereignisse zaehlen.
+    /// Usually 1 or -1. On a fast turn one event bundles several detents rather than sending many
+    /// events - the receiver computes <c>value += Delta * stepSize</c> and never has to count
+    /// events.
     /// </summary>
     public int Delta { get; }
 }

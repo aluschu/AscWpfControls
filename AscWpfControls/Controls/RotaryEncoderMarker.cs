@@ -1,17 +1,17 @@
 namespace AscWpfControls.Controls;
 
 /// <summary>
-/// Die mitgelieferten Markierungen eines <see cref="RotaryEncoder"/>. Wer etwas anderes will,
-/// tauscht weiterhin das ControlTemplate aus - diese drei sind die Abkuerzung dahin.
+/// The markers supplied with a <see cref="RotaryEncoder"/>. Anyone wanting something else still
+/// replaces the ControlTemplate - these three are the shortcut there.
 /// </summary>
 public enum RotaryEncoderMarker
 {
-    /// <summary>Ein kurzer Strich am Rand, der die Mitte nicht erreicht.</summary>
+    /// <summary>A short line at the rim that stops short of the centre.</summary>
     Notch,
 
-    /// <summary>Ein Zeiger von der Nabe bis kurz vor den Rand, wie bei einer Uhr.</summary>
+    /// <summary>A pointer from the hub to just short of the rim, like a clock hand.</summary>
     Pointer,
 
-    /// <summary>Ein Punkt nahe dem Rand, wie an vielen Hardware-Encodern.</summary>
+    /// <summary>A dot near the rim, as on many hardware encoders.</summary>
     Dot,
 }

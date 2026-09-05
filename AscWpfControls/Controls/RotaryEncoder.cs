@@ -9,40 +9,40 @@ using System.Windows.Media;
 namespace AscWpfControls.Controls;
 
 /// <summary>
-/// Ein Endlos-Drehregler nach dem Vorbild eines Hardware-Encoders am Mischpult.
+/// An endless rotary dial, modelled on the hardware encoders found on a mixing desk.
 ///
-/// Das Control kennt bewusst <b>keinen Wert</b>: keine Ober- oder Untergrenze, kein Zahlenformat,
-/// keine Schrittweite. Es meldet ausschliesslich, dass gedreht wurde - per <see cref="Ticked"/> und
-/// <see cref="TickCommand"/>, mit einer vorzeichenbehafteten Anzahl von Rasten. Was eine Raste
-/// bedeutet, entscheidet der Empfaenger: ein Cent bei einem Kurs, ein Stueck bei einer Menge, und
-/// die Schrittweite darf sich dort am Wertniveau orientieren.
+/// The control deliberately knows <b>no value</b>: no upper or lower bound, no number format, no
+/// step size. All it reports is that it was turned - through <see cref="Ticked"/> and
+/// <see cref="TickCommand"/>, with a signed number of detents. What a detent means is up to the
+/// receiver: a cent on a price, one unit on a quantity, and the step size may well depend on the
+/// magnitude of the value.
 ///
-/// Diese Trennung haelt die Tuer offen, spaeter einen echten Hardware-Encoder (etwa ueber MIDI) an
-/// dieselbe Stelle zu haengen: Rasten liefert der genauso, einen formatierten Wert nicht. Aus dem
-/// gleichen Grund wertet das Control auch keine Modifiertasten aus - ein Encoder am Mischpult hat
-/// keine Umschalttaste. Wer feiner drehen will, liest <see cref="Keyboard.Modifiers"/> dort, wo
-/// ohnehin ueber die Schrittweite entschieden wird.
+/// That separation keeps the door open for wiring a real hardware encoder (over MIDI, say) into the
+/// same place later: it delivers detents just as readily, but never a formatted value. For the same
+/// reason the control ignores modifier keys - an encoder on a mixing desk has no shift key. Anyone
+/// wanting a finer turn reads <see cref="Keyboard.Modifiers"/> where the step size is decided
+/// anyway.
 /// </summary>
 public class RotaryEncoder : Control
 {
     /// <summary>
-    /// Sammelt die eigenen Eigenschaften im Eigenschaftenfenster von Visual Studio unter einer
-    /// gemeinsamen Ueberschrift - ohne Kategorie landen sie alle unter "Sonstiges" und sind zwischen
-    /// den geerbten Eigenschaften eines Controls kaum zu finden.
+    /// Groups this control's own properties under a single heading in the Visual Studio property
+    /// window. Without a category they all end up under "Misc", where they are nearly impossible to
+    /// find among a control's inherited properties.
     /// </summary>
-    private const string Kategorie = "Rotary Encoder";
+    private const string CategoryName = "Rotary Encoder";
 
     /// <summary>
-    /// Bezugstempo der Beschleunigung in DIP je Sekunde: Bei dieser Ziehgeschwindigkeit wirkt
-    /// <see cref="AccelerationFactor"/> genau einfach. Bewusst eine Konstante - eine weitere
-    /// Stellschraube haette den Regler nur schwerer einstellbar gemacht.
+    /// Reference speed for acceleration, in DIP per second: at this drag speed
+    /// <see cref="AccelerationFactor"/> applies exactly once. Deliberately a constant - one more
+    /// adjustment screw would only have made the dial harder to tune.
     /// </summary>
-    private const double TempoBezug = 1000.0;
+    private const double ReferenceSpeed = 1000.0;
 
-    private POINT _anker;
-    private bool _dreht;
-    private double _restRasten;
-    private long _letzterZeitstempel;
+    private POINT _anchor;
+    private bool _turning;
+    private double _pendingTicks;
+    private long _lastTimestamp;
 
     static RotaryEncoder()
     {
@@ -50,23 +50,23 @@ public class RotaryEncoder : Control
             new FrameworkPropertyMetadata(typeof(RotaryEncoder)));
         FocusableProperty.OverrideMetadata(typeof(RotaryEncoder),
             new FrameworkPropertyMetadata(true));
-        // Ohne diese beiden Vorgaben zieht eine Grid-Zelle den Regler auf ihre volle Groesse - er
-        // bliebe zwar rund, haette aber eine viel zu grosse Klickflaeche.
+        // Without these two defaults a grid cell stretches the dial to its full size - it would
+        // stay round, but its click area would be far too large.
         HorizontalAlignmentProperty.OverrideMetadata(typeof(RotaryEncoder),
             new FrameworkPropertyMetadata(HorizontalAlignment.Center));
         VerticalAlignmentProperty.OverrideMetadata(typeof(RotaryEncoder),
             new FrameworkPropertyMetadata(VerticalAlignment.Center));
     }
 
-    // ----- Ereignis und Command -----
+    // ----- Event and command -----
 
     public static readonly RoutedEvent TickedEvent = EventManager.RegisterRoutedEvent(
         nameof(Ticked), RoutingStrategy.Bubble,
         typeof(EventHandler<RotaryEncoderTickEventArgs>), typeof(RotaryEncoder));
 
-    /// <summary>Wird bei jeder Drehung ausgeloest - siehe <see cref="RotaryEncoderTickEventArgs.Delta"/>.</summary>
-    [Category(Kategorie)]
-    [Description("Meldet eine Drehung mit der vorzeichenbehafteten Anzahl von Rasten.")]
+    /// <summary>Raised on every turn - see <see cref="RotaryEncoderTickEventArgs.Delta"/>.</summary>
+    [Category(CategoryName)]
+    [Description("Reports a turn with the signed number of detents.")]
     public event EventHandler<RotaryEncoderTickEventArgs> Ticked
     {
         add => AddHandler(TickedEvent, value);
@@ -77,25 +77,25 @@ public class RotaryEncoder : Control
         nameof(TickCommand), typeof(ICommand), typeof(RotaryEncoder));
 
     /// <summary>
-    /// Derselbe Anstoss wie <see cref="Ticked"/>, nur als Command - damit sich der Regler ohne
-    /// Code-Behind an ein ViewModel binden laesst. Der Parameter ist das Delta als <c>int</c>.
+    /// The same signal as <see cref="Ticked"/>, only as a command - so the dial can be bound to a
+    /// view model without any code-behind. The parameter is the delta as an <c>int</c>.
     /// </summary>
-    [Category(Kategorie)]
-    [Description("Wird bei jeder Drehung ausgefuehrt; der Parameter ist die Anzahl der Rasten.")]
+    [Category(CategoryName)]
+    [Description("Executed on every turn; the parameter is the number of detents.")]
     public ICommand? TickCommand
     {
         get => (ICommand?)GetValue(TickCommandProperty);
         set => SetValue(TickCommandProperty, value);
     }
 
-    // ----- Einstellungen -----
+    // ----- Settings -----
 
     public static readonly DependencyProperty PixelsPerTickProperty = DependencyProperty.Register(
         nameof(PixelsPerTick), typeof(double), typeof(RotaryEncoder), new PropertyMetadata(6.0));
 
-    /// <summary>Wie weit bei ruhiger Bewegung gezogen werden muss, bis eine Raste entsteht (in DIP).</summary>
-    [Category(Kategorie)]
-    [Description("Wie weit bei ruhiger Bewegung gezogen werden muss, bis eine Raste entsteht.")]
+    /// <summary>How far a calm drag has to travel before one detent occurs (in DIP).</summary>
+    [Category(CategoryName)]
+    [Description("How far a calm drag has to travel before one detent occurs.")]
     public double PixelsPerTick
     {
         get => (double)GetValue(PixelsPerTickProperty);
@@ -106,11 +106,11 @@ public class RotaryEncoder : Control
         nameof(AccelerationFactor), typeof(double), typeof(RotaryEncoder), new PropertyMetadata(3.0));
 
     /// <summary>
-    /// Wie stark schnelles Ziehen die Rasten vervielfacht. <c>0</c> schaltet die Beschleunigung ab
-    /// und macht den Regler streng linear.
+    /// How strongly a fast drag multiplies the detents. <c>0</c> turns acceleration off and makes
+    /// the dial strictly linear.
     /// </summary>
-    [Category(Kategorie)]
-    [Description("Wie stark schnelles Ziehen die Rasten vervielfacht. 0 schaltet die Beschleunigung ab.")]
+    [Category(CategoryName)]
+    [Description("How strongly a fast drag multiplies the detents. 0 turns acceleration off.")]
     public double AccelerationFactor
     {
         get => (double)GetValue(AccelerationFactorProperty);
@@ -121,11 +121,11 @@ public class RotaryEncoder : Control
         nameof(MaxTicksPerEvent), typeof(int), typeof(RotaryEncoder), new PropertyMetadata(32));
 
     /// <summary>
-    /// Obergrenze je Ereignis, damit ein Ruck mit der Maus nicht den halben Wertebereich
-    /// ueberspringt. Was darueber hinausgeht, wird verworfen - das ist der Zweck der Grenze.
+    /// An upper bound per event, so that one jerk of the mouse does not skip half the range.
+    /// Anything beyond it is discarded - that is what the limit is for.
     /// </summary>
-    [Category(Kategorie)]
-    [Description("Obergrenze der Rasten je Ereignis, damit ein Ruck nicht den halben Wertebereich ueberspringt.")]
+    [Category(CategoryName)]
+    [Description("Upper bound of detents per event, so a jerk does not skip half the range.")]
     public int MaxTicksPerEvent
     {
         get => (int)GetValue(MaxTicksPerEventProperty);
@@ -135,9 +135,9 @@ public class RotaryEncoder : Control
     public static readonly DependencyProperty TicksPerPageProperty = DependencyProperty.Register(
         nameof(TicksPerPage), typeof(int), typeof(RotaryEncoder), new PropertyMetadata(10));
 
-    /// <summary>Wie viele Rasten Bild auf/ab meldet.</summary>
-    [Category(Kategorie)]
-    [Description("Wie viele Rasten die Tasten Bild auf und Bild ab melden.")]
+    /// <summary>How many detents Page Up and Page Down report.</summary>
+    [Category(CategoryName)]
+    [Description("How many detents the Page Up and Page Down keys report.")]
     public int TicksPerPage
     {
         get => (int)GetValue(TicksPerPageProperty);
@@ -147,9 +147,9 @@ public class RotaryEncoder : Control
     public static readonly DependencyProperty DegreesPerTickProperty = DependencyProperty.Register(
         nameof(DegreesPerTick), typeof(double), typeof(RotaryEncoder), new PropertyMetadata(12.0));
 
-    /// <summary>Um wie viel Grad sich die Markierung je Raste weiterdreht - reine Optik.</summary>
-    [Category(Kategorie)]
-    [Description("Um wie viel Grad sich die Markierung je Raste weiterdreht.")]
+    /// <summary>How far the marker rotates per detent, in degrees - purely cosmetic.</summary>
+    [Category(CategoryName)]
+    [Description("How far the marker rotates per detent, in degrees.")]
     public double DegreesPerTick
     {
         get => (double)GetValue(DegreesPerTickProperty);
@@ -161,14 +161,14 @@ public class RotaryEncoder : Control
         new FrameworkPropertyMetadata(26.0, FrameworkPropertyMetadataOptions.AffectsMeasure));
 
     /// <summary>
-    /// Die Groesse des Knopfes - eine Zahl statt zweier, denn ein Drehregler ist rund.
+    /// The size of the knob - one number instead of two, because a dial is round.
     ///
-    /// Wer stattdessen <see cref="FrameworkElement.Width"/> und <see cref="FrameworkElement.Height"/>
-    /// setzt, bekommt trotzdem kein Ei: Das Template zeichnet den Knopf immer gleichmaessig skaliert
-    /// und mittig in die Flaeche, die das Layout ihm zuweist.
+    /// Setting <see cref="FrameworkElement.Width"/> and <see cref="FrameworkElement.Height"/>
+    /// instead still does not produce an egg: the template always draws the knob scaled evenly and
+    /// centred within whatever area the layout hands it.
     /// </summary>
-    [Category(Kategorie)]
-    [Description("Die Groesse des runden Knopfes - eine Zahl statt Width und Height.")]
+    [Category(CategoryName)]
+    [Description("The size of the round knob - one number instead of Width and Height.")]
     public double Diameter
     {
         get => (double)GetValue(DiameterProperty);
@@ -179,9 +179,9 @@ public class RotaryEncoder : Control
         nameof(MarkerKind), typeof(RotaryEncoderMarker), typeof(RotaryEncoder),
         new PropertyMetadata(RotaryEncoderMarker.Notch));
 
-    /// <summary>Welche der mitgelieferten Markierungen der Knopf traegt.</summary>
-    [Category(Kategorie)]
-    [Description("Die Markierung auf dem Knopf: Kerbe, Zeiger oder Punkt.")]
+    /// <summary>Which of the supplied markers the knob carries.</summary>
+    [Category(CategoryName)]
+    [Description("The marker on the knob: notch, pointer or dot.")]
     public RotaryEncoderMarker MarkerKind
     {
         get => (RotaryEncoderMarker)GetValue(MarkerKindProperty);
@@ -192,14 +192,14 @@ public class RotaryEncoder : Control
         nameof(MarkerBrush), typeof(Brush), typeof(RotaryEncoder));
 
     /// <summary>
-    /// Die Farbe der Markierung. Eine eigene Eigenschaft statt <see cref="Control.Foreground"/>, damit
-    /// sich die Markierung faerben laesst, ohne dass der Knopfrand mitgeht.
+    /// The colour of the marker. A property of its own rather than <see cref="Control.Foreground"/>,
+    /// so that the marker can be tinted without the knob's rim following along.
     ///
-    /// Heisst <c>Brush</c> und nicht <c>Color</c>, weil ein Pinsel auch ein Verlauf sein darf - und
-    /// weil WPF es bei <see cref="Control.BorderBrush"/> und Konsorten genauso haelt.
+    /// Named <c>Brush</c> and not <c>Color</c>, because a brush may also be a gradient - and because
+    /// WPF does the same with <see cref="Control.BorderBrush"/> and its kin.
     /// </summary>
-    [Category(Kategorie)]
-    [Description("Die Farbe der Markierung auf dem Knopf.")]
+    [Category(CategoryName)]
+    [Description("The colour of the marker on the knob.")]
     public Brush? MarkerBrush
     {
         get => (Brush?)GetValue(MarkerBrushProperty);
@@ -210,11 +210,11 @@ public class RotaryEncoder : Control
         nameof(FocusRingBrush), typeof(Brush), typeof(RotaryEncoder));
 
     /// <summary>
-    /// Die Farbe des gepunkteten Rings, der den Tastaturfokus anzeigt. Auf <c>Transparent</c> gesetzt
-    /// verschwindet er - fuer alle, die es unauffaelliger moegen.
+    /// The colour of the dotted ring that indicates keyboard focus. Set it to <c>Transparent</c> and
+    /// it disappears - for anyone who prefers it less conspicuous.
     /// </summary>
-    [Category(Kategorie)]
-    [Description("Die Farbe des Fokusrings. Transparent blendet ihn aus.")]
+    [Category(CategoryName)]
+    [Description("The colour of the focus ring. Transparent hides it.")]
     public Brush? FocusRingBrush
     {
         get => (Brush?)GetValue(FocusRingBrushProperty);
@@ -222,18 +222,18 @@ public class RotaryEncoder : Control
     }
 
     /// <summary>
-    /// Die natuerliche Groesse ist immer quadratisch. Ein <see cref="FrameworkElement.Width"/> oder
-    /// eine gestreckte Ausrichtung koennen sie von aussen ueberstimmen - dagegen haelt dann das
-    /// Template dagegen, nicht die Messung.
+    /// The natural size is always square. A <see cref="FrameworkElement.Width"/> or a stretching
+    /// alignment can override it from the outside - what pushes back then is the template, not the
+    /// measurement.
     /// </summary>
     protected override Size MeasureOverride(Size constraint)
     {
-        var seite = Math.Max(0, Diameter);
-        base.MeasureOverride(new Size(seite, seite));
-        return new Size(seite, seite);
+        var side = Math.Max(0, Diameter);
+        base.MeasureOverride(new Size(side, side));
+        return new Size(side, side);
     }
 
-    // ----- Rueckmeldung an das Template -----
+    // ----- Feedback to the template -----
 
     private static readonly DependencyPropertyKey AnglePropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(Angle), typeof(double), typeof(RotaryEncoder), new PropertyMetadata(0.0));
@@ -241,8 +241,8 @@ public class RotaryEncoder : Control
     public static readonly DependencyProperty AngleProperty = AnglePropertyKey.DependencyProperty;
 
     /// <summary>
-    /// Die Stellung der Markierung in Grad. Rein relativ: Sie zeigt, dass und wie schnell gedreht
-    /// wird, und niemals einen Wert - das Control kennt keinen.
+    /// The position of the marker in degrees. Purely relative: it shows that a turn is happening and
+    /// how fast, and never a value - the control knows none.
     /// </summary>
     [Browsable(false)]
     public double Angle
@@ -256,7 +256,7 @@ public class RotaryEncoder : Control
 
     public static readonly DependencyProperty IsTurningProperty = IsTurningPropertyKey.DependencyProperty;
 
-    /// <summary>Ob gerade gezogen wird - fuer Template-Trigger.</summary>
+    /// <summary>Whether a drag is in progress - for template triggers.</summary>
     [Browsable(false)]
     public bool IsTurning
     {
@@ -264,21 +264,21 @@ public class RotaryEncoder : Control
         private set => SetValue(IsTurningPropertyKey, value);
     }
 
-    // ----- Bedienung -----
+    // ----- Interaction -----
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
 
-        if (!GetCursorPos(out _anker) || !CaptureMouse())
+        if (!GetCursorPos(out _anchor) || !CaptureMouse())
             return;
 
-        _dreht = true;
-        _restRasten = 0;
-        _letzterZeitstempel = Stopwatch.GetTimestamp();
+        _turning = true;
+        _pendingTicks = 0;
+        _lastTimestamp = Stopwatch.GetTimestamp();
         IsTurning = true;
-        // Der Zeiger verschwindet fuer die Dauer der Drehung: Er bleibt ohnehin auf der Stelle,
-        // ein stehender Mauszeiger waehrend einer Bewegung waere nur verwirrend.
+        // The pointer disappears for the duration of the turn: it stays put anyway, and a motionless
+        // mouse pointer during a movement would only be confusing.
         Cursor = Cursors.None;
         Focus();
         e.Handled = true;
@@ -288,44 +288,44 @@ public class RotaryEncoder : Control
     {
         base.OnMouseMove(e);
 
-        if (!_dreht || !GetCursorPos(out var jetzt))
+        if (!_turning || !GetCursorPos(out var current))
             return;
 
-        // Nach oben ziehen soll aufwaerts zaehlen, die Bildschirmachse zeigt nach unten.
-        var geraetepixel = _anker.Y - jetzt.Y;
-        if (geraetepixel == 0)
+        // Dragging upwards should count up, while the screen axis points down.
+        var devicePixels = _anchor.Y - current.Y;
+        if (devicePixels == 0)
             return;
 
-        // Der Zeiger geht sofort an seinen Ausgangspunkt zurueck. Genau das macht den Regler
-        // endlos: Es gibt keinen Bildschirmrand, an dem die Bewegung aufhoert.
-        SetCursorPos(_anker.X, _anker.Y);
+        // The pointer goes straight back to where it started. That is exactly what makes the dial
+        // endless: there is no edge of the screen where the movement stops.
+        SetCursorPos(_anchor.X, _anchor.Y);
 
-        var skalierung = VisualTreeHelper.GetDpi(this).DpiScaleY;
-        var strecke = geraetepixel / (skalierung > 0 ? skalierung : 1.0);
+        var scale = VisualTreeHelper.GetDpi(this).DpiScaleY;
+        var distance = devicePixels / (scale > 0 ? scale : 1.0);
 
-        var zeitstempel = Stopwatch.GetTimestamp();
-        var sekunden = (zeitstempel - _letzterZeitstempel) / (double)Stopwatch.Frequency;
-        _letzterZeitstempel = zeitstempel;
+        var timestamp = Stopwatch.GetTimestamp();
+        var seconds = (timestamp - _lastTimestamp) / (double)Stopwatch.Frequency;
+        _lastTimestamp = timestamp;
 
-        var tempo = sekunden > 0 ? Math.Abs(strecke) / sekunden : 0;
-        var beschleunigung = 1 + AccelerationFactor * (tempo / TempoBezug);
+        var speed = seconds > 0 ? Math.Abs(distance) / seconds : 0;
+        var acceleration = 1 + AccelerationFactor * (speed / ReferenceSpeed);
 
-        // Der Rest bleibt stehen, damit auch langsames Ziehen irgendwann eine Raste ergibt, statt
-        // Bruchteile wegzuwerfen.
-        _restRasten += strecke * beschleunigung / Math.Max(PixelsPerTick, 0.1);
-        var rasten = (int)Math.Truncate(_restRasten);
-        if (rasten == 0)
+        // The remainder is carried over, so that even a slow drag eventually yields a detent instead
+        // of throwing fractions away.
+        _pendingTicks += distance * acceleration / Math.Max(PixelsPerTick, 0.1);
+        var ticks = (int)Math.Truncate(_pendingTicks);
+        if (ticks == 0)
             return;
 
-        _restRasten -= rasten;
-        Melde(rasten);
+        _pendingTicks -= ticks;
+        Report(ticks);
     }
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonUp(e);
 
-        if (!_dreht)
+        if (!_turning)
             return;
 
         ReleaseMouseCapture();
@@ -333,19 +333,19 @@ public class RotaryEncoder : Control
     }
 
     /// <summary>
-    /// Das Aufraeumen haengt am Verlust der Maus, nicht am Loslassen der Taste: So kommen Zeiger und
-    /// Zustand auch dann zurueck, wenn die Erfassung anderweitig endet.
+    /// Cleaning up hangs off the loss of the mouse, not off the button being released: that way the
+    /// pointer and the state come back even when the capture ends some other way.
     /// </summary>
     protected override void OnLostMouseCapture(MouseEventArgs e)
     {
         base.OnLostMouseCapture(e);
 
-        if (!_dreht)
+        if (!_turning)
             return;
 
-        _dreht = false;
+        _turning = false;
         IsTurning = false;
-        SetCursorPos(_anker.X, _anker.Y);
+        SetCursorPos(_anchor.X, _anchor.Y);
         ClearValue(CursorProperty);
     }
 
@@ -353,11 +353,11 @@ public class RotaryEncoder : Control
     {
         base.OnMouseWheel(e);
 
-        var rasten = e.Delta / Mouse.MouseWheelDeltaForOneLine;
-        if (rasten == 0)
+        var ticks = e.Delta / Mouse.MouseWheelDeltaForOneLine;
+        if (ticks == 0)
             return;
 
-        Melde(rasten);
+        Report(ticks);
         e.Handled = true;
     }
 
@@ -365,7 +365,7 @@ public class RotaryEncoder : Control
     {
         base.OnKeyDown(e);
 
-        var rasten = e.Key switch
+        var ticks = e.Key switch
         {
             Key.Up => 1,
             Key.Down => -1,
@@ -374,25 +374,25 @@ public class RotaryEncoder : Control
             _ => 0,
         };
 
-        if (rasten == 0)
+        if (ticks == 0)
             return;
 
-        Melde(rasten);
+        Report(ticks);
         e.Handled = true;
     }
 
-    private void Melde(int rasten)
+    private void Report(int ticks)
     {
-        rasten = Math.Clamp(rasten, -MaxTicksPerEvent, MaxTicksPerEvent);
-        if (rasten == 0)
+        ticks = Math.Clamp(ticks, -MaxTicksPerEvent, MaxTicksPerEvent);
+        if (ticks == 0)
             return;
 
-        Angle = (Angle + rasten * DegreesPerTick) % 360;
+        Angle = (Angle + ticks * DegreesPerTick) % 360;
 
-        RaiseEvent(new RotaryEncoderTickEventArgs(TickedEvent, this, rasten));
+        RaiseEvent(new RotaryEncoderTickEventArgs(TickedEvent, this, ticks));
 
-        if (TickCommand is { } command && command.CanExecute(rasten))
-            command.Execute(rasten);
+        if (TickCommand is { } command && command.CanExecute(ticks))
+            command.Execute(ticks);
     }
 
     // ----- Win32 -----
@@ -404,11 +404,11 @@ public class RotaryEncoder : Control
         public int Y;
     }
 
-    // Bewusst DllImport statt LibraryImport: Letzteres verlangt AllowUnsafeBlocks im ganzen
-    // Projekt, und dafuer sind zwei Aufrufe ein zu duenner Anlass.
+    // Deliberately DllImport rather than LibraryImport: the latter demands AllowUnsafeBlocks across
+    // the whole project, and two calls are too thin a reason for that.
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetCursorPos(out POINT punkt);
+    private static extern bool GetCursorPos(out POINT point);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
