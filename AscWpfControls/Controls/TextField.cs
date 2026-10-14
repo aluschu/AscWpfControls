@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Automation.Peers;
-using System.Windows.Input;
 using System.Windows.Markup;
 
 namespace AscWpfControls.Controls;
