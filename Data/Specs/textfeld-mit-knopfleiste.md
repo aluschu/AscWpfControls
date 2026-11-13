@@ -182,6 +182,12 @@ skalieren mit, färben sich mit, und die Bibliothek bleibt eine einzelne DLL ohn
   gibt den Fokus zurück, alle vier Icon-Stufen zeichnen, `IsReadOnly` hält das Kreuz fern, und im
   verdeckten Zustand meldet das Feld `IsPassword=True` und gibt sein Wertmuster über die
   Automation **nicht** heraus. Aufgedeckt tut es das wieder — dann steht der Wert ohnehin da.
+- **Die Fassung war ein zweiter Tabstopp** (behoben am 14.11.2026). `FieldChrome` ist ein
+  `ContentControl` und damit ab Werk fokussierbar: Tab ging vom Feld erst auf die unsichtbare
+  Fassung und dann weiter, und was man dazwischen tippte, landete trotzdem im Feld. Aufgefallen in
+  QR-Effendi, wo KeePass zwei Felder per Auto-Type mit einem Tab dazwischen füllt; mit der Maus
+  merkt man es nicht. Die Fassung ist jetzt nicht fokussierbar. An QR-Effendi nachgewiesen:
+  vorher zwei Tab-Anschläge je Feld, danach einer.
 
 ### Offene Fragen
 

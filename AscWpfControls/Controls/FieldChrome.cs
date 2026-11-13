@@ -30,6 +30,12 @@ public class FieldChrome : ContentControl
     {
         DefaultStyleKeyProperty.OverrideMetadata(typeof(FieldChrome),
             new FrameworkPropertyMetadata(typeof(FieldChrome)));
+
+        // The trim is never a place to be - focus belongs to the editor in its hole. As a
+        // ContentControl it is focusable by default, which made it a second tab stop inside every
+        // field: Tab went from the editor to the trim before it left, and whatever was typed then
+        // still ended up in the editor.
+        FocusableProperty.OverrideMetadata(typeof(FieldChrome), new FrameworkPropertyMetadata(false));
     }
 
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(
