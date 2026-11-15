@@ -290,6 +290,10 @@
                             <Setter TargetName="Chrome" Property="BorderBrush"
                                     Value="{Binding FocusedBorderBrush, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Trigger>
+                        <Trigger Property="IsFocusBackgroundShown" Value="True">
+                            <Setter TargetName="Chrome" Property="Background"
+                                    Value="{Binding FocusedBackground, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.55" />
                         </Trigger>

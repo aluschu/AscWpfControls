@@ -89,6 +89,46 @@ public class TextField : TextBox, IMaskableFieldEditor
         set => SetValue(FocusedBorderBrushProperty, value);
     }
 
+    public static readonly DependencyProperty FocusedBackgroundProperty = DependencyProperty.Register(
+        nameof(FocusedBackground), typeof(System.Windows.Media.Brush), typeof(TextField),
+        new PropertyMetadata(null, (d, _) => ((TextField)d).UpdateFocusBackground()));
+
+    /// <summary>
+    /// The background while the field has the keyboard focus. Empty by default, which keeps the
+    /// ordinary <see cref="Control.Background"/>.
+    ///
+    /// The focused border alone is easy to miss; a faint tint across the whole field says at a
+    /// glance where typing will land.
+    /// </summary>
+    [Category(CategoryName)]
+    [Description("The background while the field has the keyboard focus. Empty keeps the ordinary background.")]
+    public System.Windows.Media.Brush? FocusedBackground
+    {
+        get => (System.Windows.Media.Brush?)GetValue(FocusedBackgroundProperty);
+        set => SetValue(FocusedBackgroundProperty, value);
+    }
+
+    private static readonly DependencyPropertyKey IsFocusBackgroundShownPropertyKey =
+        DependencyProperty.RegisterReadOnly(nameof(IsFocusBackgroundShown), typeof(bool), typeof(TextField),
+            new PropertyMetadata(false));
+
+    public static readonly DependencyProperty IsFocusBackgroundShownProperty =
+        IsFocusBackgroundShownPropertyKey.DependencyProperty;
+
+    /// <summary>
+    /// Whether <see cref="FocusedBackground"/> is showing - for the template, which cannot ask a
+    /// trigger whether a brush is set.
+    /// </summary>
+    [Browsable(false)]
+    public bool IsFocusBackgroundShown
+    {
+        get => (bool)GetValue(IsFocusBackgroundShownProperty);
+        private set => SetValue(IsFocusBackgroundShownPropertyKey, value);
+    }
+
+    private void UpdateFocusBackground() =>
+        IsFocusBackgroundShown = FocusedBackground is not null && IsKeyboardFocusWithin;
+
     private static readonly DependencyPropertyKey IsPlaceholderVisiblePropertyKey =
         DependencyProperty.RegisterReadOnly(nameof(IsPlaceholderVisible), typeof(bool), typeof(TextField),
             new PropertyMetadata(false));
@@ -365,5 +405,8 @@ public class TextField : TextBox, IMaskableFieldEditor
         // reach them.
         if (e.Property == IsReadOnlyProperty)
             ReportState();
+
+        if (e.Property == IsKeyboardFocusWithinProperty)
+            UpdateFocusBackground();
     }
 }

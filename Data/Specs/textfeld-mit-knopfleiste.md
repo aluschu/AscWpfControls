@@ -53,6 +53,10 @@ Alles neu, in `AscWpfControls/Controls/`:
   Text endet vor der Leiste, statt darunter zu verschwinden.
 - Die Leiste ist leer, solange niemand etwas hineinlegt — und kostet dann auch keinen Platz.
 - Ist das Feld gesperrt (`IsEnabled="False"`), sind es die Knöpfe auch.
+- **Fokus sichtbar machen:** Mit Fokus färbt sich der Rahmen (`FocusedBorderBrush`). Wahlweise
+  bekommt das Feld dazu einen eigenen Hintergrund (`FocusedBackground`); ab Werk leer, dann bleibt
+  der Hintergrund, wie er ist. Nachtrag 15.11.2026: In QR-Effendi war der Rahmen allein zu zart, um
+  zu sehen, in welchem Feld man gerade tippt.
 
 #### Vorgabe-Text
 - Erscheint, solange das Feld leer ist, und verschwindet mit dem ersten Zeichen.
