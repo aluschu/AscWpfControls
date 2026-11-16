@@ -275,10 +275,17 @@ public class TextField : TextBox, IMaskableFieldEditor
         set => SetValue(MaskLengthProperty, value);
     }
 
-    private string BuildMaskText() =>
-        IsEmpty
-            ? EmptySecretText ?? string.Empty
-            : new string(MaskChar, MaskLength > 0 ? MaskLength : Text.Length);
+    private string BuildMaskText()
+    {
+        if (IsEmpty) return EmptySecretText ?? string.Empty;
+        if (MaskLength > 0) return new string(MaskChar, MaskLength);
+
+        // MaskLength 0 already gives the length away, so a multi-line field may as well show its
+        // lines: one row of dots per line. The field then keeps the height the text would have,
+        // instead of a single row floating in a box sized for many.
+        if (!AcceptsReturn) return new string(MaskChar, Text.Length);
+        return string.Join("\n", Text.Replace("\r\n", "\n").Split('\n').Select(line => new string(MaskChar, line.Length)));
+    }
 
     private void OnSecrecyChanged()
     {

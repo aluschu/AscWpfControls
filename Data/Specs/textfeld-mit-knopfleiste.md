@@ -131,6 +131,9 @@ skalieren mit, färben sich mit, und die Bibliothek bleibt eine einzelne DLL ohn
 - Solange verdeckt, zeigt das Feld **Punkte statt des Werts** und ist schreibgeschützt. Sonst tippte
   jemand über die Punkte und speicherte am Ende die Punkte.
 - Die Anzahl der Punkte sagt nichts über die Länge des Werts.
+  - Nachtrag: Mit `MaskLength = 0` folgt die Zahl der Punkte bewusst der Länge. Nimmt das Feld
+    dann auch Zeilenumbrüche an (`AcceptsReturn`), steht je Zeile eine Punktreihe, damit das Feld
+    so hoch bleibt wie der Text (QR-Effendi, Recovery-Codes, 2026-11-16).
 - Ist der Wert leer, steht dort ein Vertretungstext statt Punkten — sonst sieht ein leeres Geheimnis
   aus wie ein gefülltes.
 - Der Knopf schaltet um und sagt, was er tut.

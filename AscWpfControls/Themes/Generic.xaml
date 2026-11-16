@@ -203,6 +203,9 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="5,3" />
         <Setter Property="PlaceholderForeground" Value="#9A9A9A" />
+        <!-- Centred for a single line; a multi-line field sets Top so its lines start at the top
+             instead of floating in the middle of a tall box. -->
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:FieldChrome}">
@@ -216,7 +219,8 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentPresenter x:Name="Editor" Grid.Column="0" VerticalAlignment="Center" />
+                            <ContentPresenter x:Name="Editor" Grid.Column="0"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
 
                             <!-- The mask covers the editor rather than replacing its content: the
                                  field's Text keeps the real value at all times, and hiding stays a
@@ -225,7 +229,7 @@
                             <TextBlock x:Name="Mask" Grid.Column="0"
                                        Margin="{TemplateBinding Padding}"
                                        Text="{TemplateBinding MaskText}"
-                                       VerticalAlignment="Center"
+                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                        IsHitTestVisible="False"
                                        Visibility="Collapsed" />
 
@@ -233,14 +237,15 @@
                                        Margin="{TemplateBinding Padding}"
                                        Text="{TemplateBinding PlaceholderText}"
                                        Foreground="{TemplateBinding PlaceholderForeground}"
-                                       VerticalAlignment="Center"
+                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                        IsHitTestVisible="False"
                                        Visibility="Collapsed"
                                        TextTrimming="CharacterEllipsis" />
 
                             <StackPanel x:Name="PART_Actions" Grid.Column="1"
                                         Orientation="Horizontal"
-                                        Margin="2,0,4,0" VerticalAlignment="Center" />
+                                        Margin="2,0,4,0"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -267,6 +272,8 @@
         <Setter Property="PlaceholderForeground" Value="#9A9A9A" />
         <Setter Property="FocusedBorderBrush" Value="#3A6EA5" />
         <Setter Property="AllowDrop" Value="True" />
+        <!-- TextBox defaults to Top; a one-line field has always been centred. -->
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:TextField}">
@@ -280,10 +287,13 @@
                                           IsPlaceholderVisible="{TemplateBinding IsPlaceholderVisible}"
                                           MaskText="{TemplateBinding MaskText}"
                                           IsMaskVisible="{TemplateBinding IsMasked}"
-                                          Actions="{TemplateBinding Actions}">
+                                          Actions="{TemplateBinding Actions}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                        <!-- The vertical bar follows the field (TextBox default: hidden), so a
+                             multi-line field with a MaxHeight can show one. -->
                         <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
                                       HorizontalScrollBarVisibility="Hidden"
-                                      VerticalScrollBarVisibility="Hidden" />
+                                      VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
                     </controls:FieldChrome>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
